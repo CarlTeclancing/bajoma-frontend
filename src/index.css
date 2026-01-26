@@ -1,0 +1,90 @@
+@import 'tailwindcss';
+
+
+:root {
+  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+#root{
+  min-width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+body {
+  margin: 0;
+  display: flex;
+  place-items: center;
+  min-width: 320px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+}
+.nav-element:hover{
+  text-decoration: underline;
+  color: #78C726;
+}
+.nav-element::after{
+  text-decoration: underline;
+  color: #78C726;
+}
+.nav-element:focus,
+.nav-element:focus-visible{
+  text-decoration: underline;
+  color: #78C726;
+}
+
+button:hover {
+  border-color: #646cff;
+}
+
+button:focus,
+button:focus-visible {
+  outline: 4px auto #78C726;
+}
+.hero{
+  background-image: url('./assets/herobg.png');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  color: white;
+}
+@media (prefers-color-scheme: light) {
+  /*
+  :root {
+    color: #213547;
+    background-color: #ffffff;
+  }
+  a:hover {
+    color: #747bff;
+  }
+  button {
+    background-color: #f9f9f9;
+  }
+  */
+}
+.mobile-navigation{
+  display: none;
+}
+.sectiontwo{
+  background-image: url('./assets/sectiontwobg.png');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  color: white;
+
+}
+@media screen and (max-width: 768px) {
+  .desktop-navigation{
+    display: none;
+  }
+  .mobile-navigation{
+    display: flex;
+  }
+}
