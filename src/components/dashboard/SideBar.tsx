@@ -1,12 +1,22 @@
 import React from 'react'
 import { Images } from '../../constants/ImgImports'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 
 
 const SideBar = () => {
-
+  const navigate = useNavigate();
   const [change, setChange] = React.useState(0);
   const location = window.location.pathname;
+
+  const handleLogout = () => {
+    // Clear user data from localStorage
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    
+    // Redirect to login page
+    navigate('/login');
+  };
+
   return (
     <div className='hidden md:flex w-[260px] h-[100vh] p-2 flex-col overflow-y-scroll border-r-1 border-gray-300'>
         <img src={Images.logohfull} alt="" />
@@ -87,15 +97,14 @@ const SideBar = () => {
             </Link>
             <br /><br />
             <hr className='w-[90%]' />
-            <Link 
-              to={'/logout'} 
-              onClick={()=> setChange(9)}
-              className={change==9?'w-[90%] h-12 text-white bg-[#90C955] p-4 mt-12 flex items-center justify-between rounded':'w-[90%] h-12 text-black p-4 mt-12 flex items-center justify-between rounded'}>
+            <button 
+              onClick={handleLogout}
+              className='w-[90%] h-12 text-white bg-[#DF6B57] p-4 mt-12 flex items-center justify-between rounded hover:bg-[#c85a47] cursor-pointer'>
                 <div>
                 <i className="bi m-2 bi-box-arrow-right"></i><span>Logout</span>
                 </div>
                 <i className="bi bi-chevron-right"></i>
-            </Link>
+            </button>
         </div>
     </div>
   )
