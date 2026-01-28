@@ -8,6 +8,8 @@ const TopNavigation = () => {
     const [menuOpen, setMenuOpen] = React.useState(false);
     const [change, setChange] = React.useState(0);
     const [user, setUser] = React.useState<any>(null);
+    const location = window.location.pathname;
+    const isFarmerDashboard = location.startsWith('/farmer');
 
     React.useEffect(() => {
         const storedUser = localStorage.getItem('user');
@@ -24,15 +26,18 @@ const TopNavigation = () => {
     <>
     
         <div className="hidden md:flex justify-between items-center mb-4 border-b-2 border-gray-300 pb-2">
-            <h1 className='text-2 font-bold'>Welcome to BAJOMA Admin Dashboard</h1>
+            <h1 className='text-2 font-bold'>
+                {isFarmerDashboard ? 'Welcome to BAJOMA Farmers Dashboard' : 'Welcome to BAJOMA Admin Dashboard'}
+            </h1>
             <div className='flex items-center'>
-              <Link to={'/dashboard/notifications'}>
+              <Link to={isFarmerDashboard ? '/farmer/notifications' : '/dashboard/notifications'}>
                 <button className='border border-[#90C955] rounded'><i className='bi bi-bell text-2xl text-[#90C955] m-2'></i></button>
               </Link>
                 <img src={Images.profileimg} alt="profile" className='w-10 h-10 rounded-full ml-4'/>
                 <div className='flex flex-col ml-2'>
-                    <span className='font-semibold'>{user?.name || 'Admin'}</span>
+                    <span className='font-semibold'>{user?.name || 'User'}</span>
                     <span className='text-xs text-gray-500'>{user?.email || ''}</span>
+                    <span className='text-xs text-gray-400'>{user?.phone || ''} • {user?.account_type || ''}</span>
                 </div>
             </div>
             
@@ -47,10 +52,14 @@ const TopNavigation = () => {
               </button>
           
             <div className='flex items-center'>
-              <Link to={'/dashboard/notifications'}>
+              <Link to={isFarmerDashboard ? '/farmer/notifications' : '/dashboard/notifications'}>
                 <button className='border border-[#90C955] rounded'><i className='bi bi-bell text-2xl text-[#90C955] m-2'></i></button>
               </Link>
                 <img src={Images.profileimg} alt="profile" className='w-10 h-10 rounded-full ml-4'/>
+                <div className='flex flex-col ml-2'>
+                    <span className='font-semibold text-sm'>{user?.name || 'User'}</span>
+                    <span className='text-xs text-gray-500'>{user?.account_type || ''}</span>
+                </div>
             </div>
         </nav>
 
