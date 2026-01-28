@@ -17,17 +17,34 @@ const MyAccount = () => {
   const [loading, setLoading] = React.useState(true);
 
   React.useEffect(() => {
-    axios.get('http://localhost:5000/api/v1/order')
+    console.log('Fetching orders...');
+    axios.get('http://localhost:5000/api/v1/orders')
       .then(res => {
+        console.log('Full response:', res.data);
         const data = Array.isArray(res.data.content) ? res.data.content : [];
-        setOrders(data);
+        console.log('All orders from API:', data);
+        console.log('Current user object:', currentUser);
+        
+        // Filter orders for the current user
+        let myOrders = data;
+        if (currentUser && currentUser.id) {
+          myOrders = data.filter((order: any) => {
+            console.log(`Comparing order.user_id (${order.user_id}) with currentUser.id (${currentUser.id})`);
+            return order.user_id === currentUser.id;
+          });
+        }
+        
+        console.log('Filtered orders for current user:', myOrders);
+        console.log('Number of orders:', myOrders.length);
+        setOrders(myOrders);
         setLoading(false);
       })
-      .catch(() => {
+      .catch((error) => {
+        console.error('Error fetching orders:', error);
         setOrders([]);
         setLoading(false);
       });
-  }, []);
+  }, [currentUser]);
 
   return (
     <HomeLayout>

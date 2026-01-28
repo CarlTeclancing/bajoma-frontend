@@ -1,10 +1,13 @@
 import React from 'react'
 import HomeLayout from '../../components/general/HomeLayout'
 import { useNavigate } from 'react-router-dom'
+import axios from 'axios'
+import { BACKEND_URL } from '../../global'
 
 const Checkout = () => {
   const navigate = useNavigate();
   const [cartItems, setCartItems] = React.useState<any[]>([]);
+  const [loading, setLoading] = React.useState(false);
   const [formData, setFormData] = React.useState({
     firstName: '',
     lastName: '',
@@ -28,12 +31,34 @@ const Checkout = () => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    alert('Order placed successfully! (This is a demo)');
-    localStorage.removeItem('cart');
-    window.dispatchEvent(new Event('cartUpdated'));
-    navigate('/account');
+    setLoading(true);
+
+    try {
+      // Create an order for each item in the cart
+      const orderPromises = cartItems.map(item => {
+        return axios.post(`${BACKEND_URL}/orders`, {
+          product_id: item.id,
+          quantity: item.quantity,
+          status: 'pending'
+        });
+      });
+
+      await Promise.all(orderPromises);
+
+      // Clear cart after successful order creation
+      localStorage.removeItem('cart');
+      window.dispatchEvent(new Event('cartUpdated'));
+      
+      alert('Order placed successfully!');
+      navigate('/account');
+    } catch (error) {
+      console.error('Error placing order:', error);
+      alert('Failed to place order. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const subtotal = cartItems.reduce((sum, item) => {
@@ -270,10 +295,20 @@ const Checkout = () => {
                 {/* Submit Button */}
                 <button 
                   type="submit"
-                  className='w-full bg-[#78C726] text-white rounded-lg py-4 font-semibold text-lg hover:bg-[#6AB31E] transition flex items-center justify-center gap-2'
+                  disabled={loading}
+                  className='w-full bg-[#78C726] text-white rounded-lg py-4 font-semibold text-lg hover:bg-[#6AB31E] transition flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed'
                 >
-                  <i className='bi bi-lock'></i>
-                  Place Order
+                  {loading ? (
+                    <>
+                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                      Processing...
+                    </>
+                  ) : (
+                    <>
+                      <i className='bi bi-lock'></i>
+                      Place Order
+                    </>
+                  )}
                 </button>
 
                 <div className="mt-4 text-center text-sm text-gray-600">

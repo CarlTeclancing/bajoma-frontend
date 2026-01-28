@@ -50,6 +50,15 @@ const SideBar = () => {
                 <i className="bi bi-chevron-right"></i>
             </Link>
             <Link 
+              to={'/dashboard/farms'} 
+              onClick={()=> setChange(9)}
+              className={location==='/dashboard/farms'?'w-[90%] h-12 text-white bg-[#90C955] p-4 mt-4 flex items-center justify-between rounded':'w-[90%] h-12 text-black p-4 mt-4 flex items-center justify-between rounded'}>
+                <div>
+                <i className="bi m-2 bi-house-fill"></i><span>Farms</span>
+                </div>
+                <i className="bi bi-chevron-right"></i>
+            </Link>
+            <Link 
               to={'/dashboard/users'} 
               onClick={()=> setChange(3)}
               className={location==='/dashboard/users'?'w-[90%] h-12 text-white bg-[#90C955] p-4 mt-4 flex items-center justify-between rounded':'w-[90%] h-12 text-black p-4 mt-4 flex items-center justify-between rounded'}>
