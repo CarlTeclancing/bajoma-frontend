@@ -9,6 +9,7 @@ const TopNavigation = () => {
     const [menuOpen, setMenuOpen] = React.useState(false);
     const [change, setChange] = React.useState(0);
     const [pendingOrdersCount, setPendingOrdersCount] = React.useState(0);
+    const [adminNotificationCount, setAdminNotificationCount] = React.useState(0);
     const { currentUser } = useAuth();
     const location = window.location.pathname;
     const isFarmerDashboard = location.startsWith('/farmer');
@@ -23,6 +24,17 @@ const TopNavigation = () => {
             return () => clearInterval(interval);
         }
     }, [isFarmerDashboard, currentUser]);
+
+    // Fetch admin notifications count
+    React.useEffect(() => {
+        if (!isFarmerDashboard) {
+            fetchAdminNotifications();
+            
+            // Refresh every 30 seconds
+            const interval = setInterval(fetchAdminNotifications, 30000);
+            return () => clearInterval(interval);
+        }
+    }, [isFarmerDashboard]);
 
     const fetchPendingOrders = async () => {
         try {
@@ -41,6 +53,32 @@ const TopNavigation = () => {
             console.error('Error fetching pending orders:', error);
         }
     };
+
+    const fetchAdminNotifications = async () => {
+        try {
+            // Get notifications from last 7 days
+            const sevenDaysAgo = new Date();
+            sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+            const [productsRes, usersRes, ordersRes] = await Promise.all([
+                axios.get(`${BACKEND_URL}/product`),
+                axios.get(`${BACKEND_URL}/users`),
+                axios.get(`${BACKEND_URL}/orders`)
+            ]);
+
+            const products = Array.isArray(productsRes.data.content) ? productsRes.data.content : [];
+            const users = Array.isArray(usersRes.data) ? usersRes.data : [];
+            const orders = Array.isArray(ordersRes.data.content) ? ordersRes.data.content : [];
+
+            const newProducts = products.filter((p: any) => new Date(p.createdAt) > sevenDaysAgo).length;
+            const newUsers = users.filter((u: any) => new Date(u.createdAt) > sevenDaysAgo).length;
+            const newOrders = orders.filter((o: any) => new Date(o.createdAt) > sevenDaysAgo).length;
+
+            setAdminNotificationCount(newProducts + newUsers + newOrders);
+        } catch (error) {
+            console.error('Error fetching admin notifications:', error);
+        }
+    };
   return (
 
     <>
@@ -50,8 +88,20 @@ const TopNavigation = () => {
                 {isFarmerDashboard ? 'Welcome to BAJOMA Farmers Dashboard' : 'Welcome to BAJOMA Admin Dashboard'}
             </h1>
             <div className='flex items-center'>
-              <Link to={isFarmerDashboard ? '/farmer/notifications' : '/dashboard/notifications'}>
-                <button className='border border-[#90C955] rounded'><i className='bi bi-bell text-2xl text-[#90C955] m-2'></i></button>
+              <Link to={isFarmerDashboard ? '/farmer/notifications' : '/dashboard/notifications'} className='relative'>
+                <button className='border border-[#90C955] rounded relative'>
+                  <i className='bi bi-bell text-2xl text-[#90C955] m-2'></i>
+                  {isFarmerDashboard && pendingOrdersCount > 0 && (
+                    <span className='absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold animate-pulse'>
+                      {pendingOrdersCount}
+                    </span>
+                  )}
+                  {!isFarmerDashboard && adminNotificationCount > 0 && (
+                    <span className='absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold animate-pulse'>
+                      {adminNotificationCount}
+                    </span>
+                  )}
+                </button>
               </Link>
                 <img src={Images.profileimg} alt="profile" className='w-10 h-10 rounded-full ml-4'/>
                 <div className='flex flex-col ml-2'>
@@ -76,8 +126,13 @@ const TopNavigation = () => {
                 <button className='border border-[#90C955] rounded relative'>
                   <i className='bi bi-bell text-2xl text-[#90C955] m-2'></i>
                   {isFarmerDashboard && pendingOrdersCount > 0 && (
-                    <span className='absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold'>
+                    <span className='absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold animate-pulse'>
                       {pendingOrdersCount}
+                    </span>
+                  )}
+                  {!isFarmerDashboard && adminNotificationCount > 0 && (
+                    <span className='absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold animate-pulse'>
+                      {adminNotificationCount}
                     </span>
                   )}
                 </button>

@@ -2,6 +2,7 @@ import React from 'react'
 import FarmerDashboardLayout from '../../components/general/FarmerDashboardLayout';
 import axios from 'axios';
 import { BACKEND_URL } from '../../global';
+import { authStorage } from '../../config/storage.config';
 
 const FarmerProducts = () => {
     const [products, setProducts] = React.useState<any[]>([]);
@@ -25,10 +26,11 @@ const FarmerProducts = () => {
     });
 
     React.useEffect(() => {
-        const storedUser = localStorage.getItem('user');
+        const storedUser = authStorage.getItem('user');
         if (storedUser) {
             const user = JSON.parse(storedUser);
             setCurrentUser(user);
+            console.log('Logged in user:', user);
         }
         fetchProducts();
         fetchCategories();
@@ -39,12 +41,24 @@ const FarmerProducts = () => {
             const response = await axios.get(`${BACKEND_URL}/product`);
             const allProducts = Array.isArray(response.data.content) ? response.data.content : [];
             
+            console.log('All products from API:', allProducts.length);
+            
             // Filter products to show only those created by the logged-in farmer
-            const storedUser = localStorage.getItem('user');
+            const storedUser = authStorage.getItem('user');
             if (storedUser) {
                 const user = JSON.parse(storedUser);
-                const myProducts = allProducts.filter((product: any) => product.user_id === user.id);
+                console.log('Current user ID:', user.id);
+                
+                const myProducts = allProducts.filter((product: any) => {
+                    console.log(`Product ${product.id}: user_id=${product.user_id}, matches=${product.user_id === user.id}`);
+                    return product.user_id === user.id;
+                });
+                
+                console.log('My products count:', myProducts.length);
                 setProducts(myProducts);
+            } else {
+                console.log('No user logged in');
+                setProducts([]);
             }
             setLoading(false);
         } catch (error) {
@@ -72,12 +86,30 @@ const FarmerProducts = () => {
 
     const handleAddProduct = async (e: React.FormEvent) => {
         e.preventDefault();
+        
+        if (!currentUser) {
+            alert('User not logged in');
+            return;
+        }
+
         try {
-            await axios.post(`${BACKEND_URL}/product`, formData);
+            // Include user_id when creating product
+            const productData = {
+                ...formData,
+                user_id: currentUser.id
+            };
+            
+            console.log('Creating product with data:', productData);
+            
+            const response = await axios.post(`${BACKEND_URL}/product`, productData);
+            console.log('Product created:', response.data);
+            
             alert('Product added successfully!');
             setShowAddModal(false);
             resetForm();
-            fetchProducts();
+            
+            // Refetch products to update the list
+            await fetchProducts();
         } catch (error) {
             console.error('Error adding product:', error);
             alert('Failed to add product');
@@ -87,13 +119,24 @@ const FarmerProducts = () => {
     const handleUpdateProduct = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!selectedProduct) return;
+        
         try {
-            await axios.put(`${BACKEND_URL}/product/${selectedProduct.id}`, formData);
+            // Ensure user_id is preserved when updating
+            const updateData = {
+                ...formData,
+                user_id: selectedProduct.user_id || currentUser?.id
+            };
+            
+            console.log('Updating product with data:', updateData);
+            
+            await axios.put(`${BACKEND_URL}/product/${selectedProduct.id}`, updateData);
             alert('Product updated successfully!');
             setShowEditModal(false);
             setSelectedProduct(null);
             resetForm();
-            fetchProducts();
+            
+            // Refetch products to update the list
+            await fetchProducts();
         } catch (error) {
             console.error('Error updating product:', error);
             alert('Failed to update product');
@@ -154,22 +197,43 @@ const FarmerProducts = () => {
 
   return (
     <FarmerDashboardLayout>
-        <h1 className='font-bold text-2xl'>Product Management</h1>
-        <p>Review and manage your products</p>
-        <div className="flex full">
-            <div className="flex">
-                <input 
-                    type="text" 
-                    placeholder='Search products...' 
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className='border border-gray-300 rounded p-2 m-2 w-64'
-                />
-                <button className='bg-[#90C955] text-white rounded p-2 m-2'><i className='bi bi-search m-2'></i>Search</button>
+        <div className="flex justify-between items-center mb-4">
+            <div>
+                <h1 className='font-bold text-2xl'>Product Management</h1>
+                <p className='text-gray-600'>Review and manage your products</p>
             </div>
-            <div className="flex ml-auto">
-                <button onClick={()=>{ resetForm(); setShowAddModal(true); }} className='bg-[#78C726] text-white rounded p-2 m-2'><i className='bi bi-plus-circle m-1'></i>Add New Product</button>
+            <div className="flex gap-2">
+                <button 
+                    onClick={() => { resetForm(); setShowAddModal(true); }} 
+                    className='bg-[#78C726] text-white rounded-lg px-4 py-2 flex items-center gap-2 hover:bg-[#6ab31f]'
+                >
+                    <i className='bi bi-plus-circle'></i>
+                    Add New Product
+                </button>
             </div>
+        </div>
+
+        <div className="flex gap-4 mb-4">
+            <input 
+                type="text" 
+                placeholder='Search products...' 
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className='flex-1 border border-gray-300 rounded-lg p-3'
+            />
+            <button 
+                onClick={fetchProducts}
+                className='bg-[#90C955] text-white rounded-lg px-6 py-3 flex items-center gap-2 hover:bg-[#7ab845]'
+            >
+                <i className='bi bi-arrow-clockwise'></i>
+                Refresh
+            </button>
+        </div>
+
+        <div className="bg-white rounded-lg border border-gray-200 p-2">
+            <p className='text-sm text-gray-600 mb-2'>
+                Showing {filteredProducts.length} of {products.length} products
+            </p>
         </div>
 
         {loading ? (
@@ -178,16 +242,17 @@ const FarmerProducts = () => {
                 <p className='mt-4 text-gray-600'>Loading your products...</p>
             </div>
         ) : (
+        <div className="overflow-x-auto">
         <table className='w-full border-collapse border border-gray-300 mt-4'>
-            <thead>
+            <thead className='bg-gray-50'>
                 <tr>
-                    <th className='border border-gray-300 p-2'>Product Name</th>
-                    <th className='border border-gray-300 p-2'>Category</th>
-                    <th className='border border-gray-300 p-2'>Price</th>
-                    <th className='border border-gray-300 p-2'>Quantity</th>
-                    <th className='border border-gray-300 p-2'>Status</th>
-                    <th className='border border-gray-300 p-2'>Date Added</th>
-                    <th className='border border-gray-300 p-2'>Actions</th>
+                    <th className='border border-gray-300 p-2 text-left'>Product Name</th>
+                    <th className='border border-gray-300 p-2 text-left'>Category</th>
+                    <th className='border border-gray-300 p-2 text-left'>Price</th>
+                    <th className='border border-gray-300 p-2 text-left'>Quantity</th>
+                    <th className='border border-gray-300 p-2 text-left'>Status</th>
+                    <th className='border border-gray-300 p-2 text-left'>Date Added</th>
+                    <th className='border border-gray-300 p-2 text-center'>Actions</th>
                 </tr>
             </thead>
             <tbody>
@@ -232,6 +297,7 @@ const FarmerProducts = () => {
                 )}
             </tbody>
         </table>
+        </div>
         )}
 
         {/* Edit modal window */}

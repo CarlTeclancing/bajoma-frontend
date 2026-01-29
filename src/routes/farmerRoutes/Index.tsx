@@ -33,10 +33,14 @@ const FarmerDashboard = () => {
     try {
       setLoading(true);
       
-      // Fetch products
-      const productsResponse = await axios.get(`${BACKEND_URL}/products`);
+      // Fetch products - FIXED: using /product instead of /products
+      const productsResponse = await axios.get(`${BACKEND_URL}/product`);
       const allProducts = Array.isArray(productsResponse.data.content) ? productsResponse.data.content : [];
       const myProducts = allProducts.filter((p: any) => p.user_id === currentUser?.id);
+      
+      console.log('Fetched products:', allProducts.length);
+      console.log('My products:', myProducts.length);
+      console.log('Current user ID:', currentUser?.id);
       
       // Fetch orders
       const ordersResponse = await axios.get(`${BACKEND_URL}/orders`);
@@ -46,6 +50,9 @@ const FarmerDashboard = () => {
       const myOrders = allOrders.filter((order: any) => 
         myProducts.some((product: any) => product.id === order.product_id)
       );
+      
+      console.log('Total orders:', allOrders.length);
+      console.log('My orders:', myOrders.length);
       
       // Calculate stats
       const pending = myOrders.filter((o: any) => o.status === 'pending').length;
