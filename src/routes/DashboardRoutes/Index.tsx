@@ -33,9 +33,9 @@ const Dashboard = () => {
       const users = Array.isArray(usersRes.data) ? usersRes.data : [];
       const categories = Array.isArray(categoriesRes.data.content) ? categoriesRes.data.content : [];
 
-      const totalRevenue = orders.reduce((sum, order) => sum + (parseFloat(order.amount) || 0), 0);
-      const pendingOrders = orders.filter(order => order.status === 'PENDING').length;
-      const activeProducts = products.filter(product => product.status === 'ACTIF').length;
+      const totalRevenue = orders.reduce((sum: any, order: any) => sum + (parseFloat(order.amount) || 0), 0);
+      const pendingOrders = orders.filter((order: any) => order.status === 'PENDING').length;
+      const activeProducts = products.filter((product: any) => product.status === 'ACTIF').length;
 
       setStats({
         totalProducts: products.length,

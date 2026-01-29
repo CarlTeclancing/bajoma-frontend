@@ -13,7 +13,6 @@ const FarmerProducts = () => {
     const [showAddModal, setShowAddModal] = React.useState(false);
     const [selectedProduct, setSelectedProduct] = React.useState<any | null>(null);
     const [searchTerm, setSearchTerm] = React.useState('');
-    const [currentUser, setCurrentUser] = React.useState<any>(null);
     const [formData, setFormData] = React.useState({
         name: '',
         description: '',
@@ -25,11 +24,6 @@ const FarmerProducts = () => {
     });
 
     React.useEffect(() => {
-        const storedUser = localStorage.getItem('user');
-        if (storedUser) {
-            const user = JSON.parse(storedUser);
-            setCurrentUser(user);
-        }
         fetchProducts();
         fetchCategories();
     }, []);

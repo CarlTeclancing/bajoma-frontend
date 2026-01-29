@@ -6,7 +6,6 @@ import { BACKEND_URL } from '../../global';
 const FarmerOrders = () => {
     const [orders, setOrders] = React.useState<any[]>([]);
     const [loading, setLoading] = React.useState(true);
-    const [products, setProducts] = React.useState<any[]>([]);
 
     // Get current user from localStorage
     const getCurrentUser = () => {
@@ -18,18 +17,7 @@ const FarmerOrders = () => {
 
     React.useEffect(() => {
         fetchOrders();
-        fetchProducts();
     }, []);
-
-    const fetchProducts = async () => {
-        try {
-            const response = await axios.get(`${BACKEND_URL}/products`);
-            const data = Array.isArray(response.data.content) ? response.data.content : [];
-            setProducts(data);
-        } catch (error) {
-            console.error('Error fetching products:', error);
-        }
-    };
 
     const fetchOrders = async () => {
         try {

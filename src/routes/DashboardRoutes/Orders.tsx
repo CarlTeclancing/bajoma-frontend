@@ -6,7 +6,6 @@ import { BACKEND_URL } from '../../global';
 const Orders = () => {
     const [orders, setOrders] = React.useState<any[]>([]);
     const [loading, setLoading] = React.useState(true);
-    const [selectedOrder, setSelectedOrder] = React.useState<any | null>(null);
     const [statusFilter, setStatusFilter] = React.useState('all');
 
     React.useEffect(() => {
