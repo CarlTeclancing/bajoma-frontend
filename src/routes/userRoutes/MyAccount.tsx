@@ -19,7 +19,7 @@ const MyAccount = () => {
   React.useEffect(() => {
     console.log('Fetching orders...');
     axios.get('http://localhost:5000/api/v1/orders')
-      .then(res => {
+      .then((res: any) => {
         console.log('Full response:', res.data);
         const data = Array.isArray(res.data.content) ? res.data.content : [];
         console.log('All orders from API:', data);
@@ -39,7 +39,7 @@ const MyAccount = () => {
         setOrders(myOrders);
         setLoading(false);
       })
-      .catch((error) => {
+      .catch((error: any) => {
         console.error('Error fetching orders:', error);
         setOrders([]);
         setLoading(false);

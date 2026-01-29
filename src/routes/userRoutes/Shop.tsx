@@ -14,7 +14,7 @@ const Shop = () => {
   React.useEffect(() => {
     // Fetch products
     axios.get('http://localhost:5000/api/v1/product')
-      .then(res => {
+      .then((res: any) => {
         const data = Array.isArray(res.data.content) ? res.data.content : [];
         setProducts(data);
         setLoading(false);
@@ -26,7 +26,7 @@ const Shop = () => {
     
     // Fetch categories
     axios.get('http://localhost:5000/api/v1/categories')
-      .then(res => setCategories(res.data.content || []))
+      .then((res: any) => setCategories(res.data.content || []))
       .catch(() => console.error('Failed to load categories'));
   }, []);
 

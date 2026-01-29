@@ -28,16 +28,6 @@ const FarmerOrders = () => {
         return () => clearInterval(interval);
     }, [refreshKey]);
 
-    const fetchProducts = async () => {
-        try {
-            const response = await axios.get(`${BACKEND_URL}/products`);
-            const data = Array.isArray(response.data.content) ? response.data.content : [];
-            setProducts(data);
-        } catch (error) {
-            console.error('Error fetching products:', error);
-        }
-    };
-
     const fetchOrders = async () => {
         try {
             const response = await axios.get(`${BACKEND_URL}/orders`);

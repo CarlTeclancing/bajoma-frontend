@@ -1,4 +1,3 @@
-import React from 'react'
 import HomeContent from '../components/general/HomeContent'
 import HomeLayout from '../components/general/HomeLayout'
 

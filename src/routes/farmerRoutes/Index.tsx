@@ -1,4 +1,3 @@
-import React from 'react'
 import FarmerDashboardLayout from '../../components/general/FarmerDashboardLayout';
 import axios from 'axios';
 import { BACKEND_URL } from '../../global';
