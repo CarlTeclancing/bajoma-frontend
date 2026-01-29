@@ -195,44 +195,96 @@ const FarmerProducts = () => {
         )
         : products;
 
+    // Calculate product stats
+    const activeProducts = products.filter(p => p.status === 'ACTIF').length;
+    const lowStockProducts = products.filter(p => parseInt(p.quantity) < 10).length;
+    const totalValue = products.reduce((sum, p) => sum + (parseFloat(p.price) * parseInt(p.quantity || 0)), 0);
+
   return (
     <FarmerDashboardLayout>
-        <div className="flex justify-between items-center mb-4">
-            <div>
-                <h1 className='font-bold text-2xl'>Product Management</h1>
-                <p className='text-gray-600'>Review and manage your products</p>
+        <h1 className='text-2xl font-bold'>Product Management</h1>
+        <p className='text-gray-600'>Review and manage your agricultural products</p>
+
+        {/* Stats Cards */}
+        <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mt-6'>
+            <div className="bg-white rounded-2xl p-6 border-2 border-gray-200 hover:border-[#90C955] transition-all">
+                <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 bg-[#E6F2D9] rounded-lg flex items-center justify-center">
+                        <i className='bi bi-box-seam text-2xl text-[#78C726]'></i>
+                    </div>
+                    <div>
+                        <p className='text-sm text-gray-600'>Total Products</p>
+                        <h2 className='text-2xl font-bold text-gray-800'>{products.length}</h2>
+                    </div>
+                </div>
             </div>
-            <div className="flex gap-2">
-                <button 
-                    onClick={() => { resetForm(); setShowAddModal(true); }} 
-                    className='bg-[#78C726] text-white rounded-lg px-4 py-2 flex items-center gap-2 hover:bg-[#6ab31f]'
-                >
-                    <i className='bi bi-plus-circle'></i>
-                    Add New Product
-                </button>
+
+            <div className="bg-white rounded-2xl p-6 border-2 border-gray-200 hover:border-[#90C955] transition-all">
+                <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+                        <i className='bi bi-check-circle text-2xl text-green-600'></i>
+                    </div>
+                    <div>
+                        <p className='text-sm text-gray-600'>Active Products</p>
+                        <h2 className='text-2xl font-bold text-gray-800'>{activeProducts}</h2>
+                    </div>
+                </div>
+            </div>
+
+            <div className="bg-white rounded-2xl p-6 border-2 border-gray-200 hover:border-amber-400 transition-all">
+                <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 bg-amber-100 rounded-lg flex items-center justify-center">
+                        <i className='bi bi-exclamation-triangle text-2xl text-amber-600'></i>
+                    </div>
+                    <div>
+                        <p className='text-sm text-gray-600'>Low Stock</p>
+                        <h2 className='text-2xl font-bold text-gray-800'>{lowStockProducts}</h2>
+                    </div>
+                </div>
+            </div>
+
+            <div className="bg-white rounded-2xl p-6 border-2 border-gray-200 hover:border-[#90C955] transition-all">
+                <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 bg-[#E6F2D9] rounded-lg flex items-center justify-center">
+                        <i className='bi bi-cash-stack text-2xl text-[#78C726]'></i>
+                    </div>
+                    <div>
+                        <p className='text-sm text-gray-600'>Inventory Value</p>
+                        <h2 className='text-2xl font-bold text-[#78C726]'>${totalValue.toFixed(2)}</h2>
+                    </div>
+                </div>
             </div>
         </div>
 
-        <div className="flex gap-4 mb-4">
+        {/* Actions and Search */}
+        <div className="flex flex-col md:flex-row gap-4 mt-6">
             <input 
                 type="text" 
-                placeholder='Search products...' 
+                placeholder='Search products by name or description...' 
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className='flex-1 border border-gray-300 rounded-lg p-3'
+                className='flex-1 border-2 border-gray-200 rounded-xl p-3 focus:border-[#90C955] focus:outline-none'
             />
             <button 
                 onClick={fetchProducts}
-                className='bg-[#90C955] text-white rounded-lg px-6 py-3 flex items-center gap-2 hover:bg-[#7ab845]'
+                className='bg-gray-100 text-gray-700 rounded-xl px-6 py-3 flex items-center gap-2 hover:bg-gray-200 border-2 border-gray-200'
             >
                 <i className='bi bi-arrow-clockwise'></i>
                 Refresh
             </button>
+            <button 
+                onClick={() => { resetForm(); setShowAddModal(true); }} 
+                className='bg-[#78C726] text-white rounded-xl px-6 py-3 flex items-center gap-2 hover:bg-[#6ab31f]'
+            >
+                <i className='bi bi-plus-circle'></i>
+                Add Product
+            </button>
         </div>
 
-        <div className="bg-white rounded-lg border border-gray-200 p-2">
-            <p className='text-sm text-gray-600 mb-2'>
-                Showing {filteredProducts.length} of {products.length} products
+        {/* Products Count */}
+        <div className="mt-4">
+            <p className='text-sm text-gray-600'>
+                Showing <span className="font-semibold text-[#78C726]">{filteredProducts.length}</span> of <span className="font-semibold">{products.length}</span> products
             </p>
         </div>
 
@@ -242,52 +294,71 @@ const FarmerProducts = () => {
                 <p className='mt-4 text-gray-600'>Loading your products...</p>
             </div>
         ) : (
+        <div className="bg-white rounded-2xl border-2 border-gray-200 mt-6 overflow-hidden">
         <div className="overflow-x-auto">
-        <table className='w-full border-collapse border border-gray-300 mt-4'>
-            <thead className='bg-gray-50'>
+        <table className='w-full'>
+            <thead className='bg-[#E6F2D9]'>
                 <tr>
-                    <th className='border border-gray-300 p-2 text-left'>Product Name</th>
-                    <th className='border border-gray-300 p-2 text-left'>Category</th>
-                    <th className='border border-gray-300 p-2 text-left'>Price</th>
-                    <th className='border border-gray-300 p-2 text-left'>Quantity</th>
-                    <th className='border border-gray-300 p-2 text-left'>Status</th>
-                    <th className='border border-gray-300 p-2 text-left'>Date Added</th>
-                    <th className='border border-gray-300 p-2 text-center'>Actions</th>
+                    <th className='p-4 text-left font-semibold text-gray-700'>Product Name</th>
+                    <th className='p-4 text-left font-semibold text-gray-700'>Category</th>
+                    <th className='p-4 text-left font-semibold text-gray-700'>Price</th>
+                    <th className='p-4 text-left font-semibold text-gray-700'>Quantity</th>
+                    <th className='p-4 text-left font-semibold text-gray-700'>Status</th>
+                    <th className='p-4 text-left font-semibold text-gray-700'>Date Added</th>
+                    <th className='p-4 text-center font-semibold text-gray-700'>Actions</th>
                 </tr>
             </thead>
             <tbody>
                 {filteredProducts.length === 0 ? (
                     <tr>
-                        <td colSpan={7} className='border border-gray-300 p-8 text-center text-gray-500'>
-                            No products found. Click "Add New Product" to get started!
+                        <td colSpan={7} className='p-8 text-center text-gray-500'>
+                            <div className="py-8">
+                                <i className="bi bi-inbox text-5xl text-gray-300 mb-3"></i>
+                                <p className="text-lg">No products found</p>
+                                <p className="text-sm">Click "Add Product" to get started!</p>
+                            </div>
                         </td>
                     </tr>
                 ) : (
                     filteredProducts.map(product => (
-                        <tr key={product.id}>
-                            <td className='border border-gray-300 p-2'>{product.name}</td>
-                            <td className='border border-gray-300 p-2'>{product.category?.name || 'N/A'}</td>
-                            <td className='border border-gray-300 p-2'>${product.price}</td>
-                            <td className='border border-gray-300 p-2'>{product.quantity}</td>
-                            <td className='border border-gray-300 p-2'>
-                                <span className={`px-2 py-1 rounded text-xs font-semibold ${
-                                    product.status === 'ACTIF' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                        <tr key={product.id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
+                            <td className='p-4'>
+                                <div className="font-medium text-gray-800">{product.name}</div>
+                                <div className="text-sm text-gray-500">{product.location || 'N/A'}</div>
+                            </td>
+                            <td className='p-4'>
+                                <span className="inline-flex items-center px-2 py-1 rounded-lg bg-gray-100 text-gray-700">
+                                    <i className="bi bi-tag-fill text-xs mr-1"></i>
+                                    {product.category?.name || 'N/A'}
+                                </span>
+                            </td>
+                            <td className='p-4'>
+                                <span className="font-semibold text-[#78C726]">${parseFloat(product.price).toFixed(2)}</span>
+                            </td>
+                            <td className='p-4'>
+                                <span className={`font-medium ${parseInt(product.quantity) < 10 ? 'text-amber-600' : 'text-gray-700'}`}>
+                                    {product.quantity} units
+                                </span>
+                            </td>
+                            <td className='p-4'>
+                                <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                                    product.status === 'ACTIF' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
                                 }`}>
                                     {product.status}
                                 </span>
                             </td>
-                            <td className='border border-gray-300 p-2'>
+                            <td className='p-4 text-gray-600'>
                                 {product.createdAt ? new Date(product.createdAt).toLocaleDateString() : 'N/A'}
                             </td>
-                            <td className='border border-gray-300 p-2'>
+                            <td className='p-4'>
                                 <div className="flex gap-2 justify-center">
-                                    <button onClick={()=>handleViewClick(product)} className='bg-[#78C726] text-white rounded p-2 hover:bg-[#6ab31f] transition-colors'>
+                                    <button onClick={()=>handleViewClick(product)} className='bg-blue-500 text-white rounded-lg p-2 hover:bg-blue-600 transition-colors' title="View">
                                         <i className='bi bi-eye'></i>
                                     </button>
-                                    <button onClick={()=>handleEditClick(product)} className='bg-[#90C955] text-white rounded p-2 hover:bg-[#7ab845] transition-colors'>
+                                    <button onClick={()=>handleEditClick(product)} className='bg-[#78C726] text-white rounded-lg p-2 hover:bg-[#6ab31f] transition-colors' title="Edit">
                                         <i className='bi bi-pencil'></i>
                                     </button>
-                                    <button onClick={()=>{ setSelectedProduct(product); setDeleteModal(true); }} className='bg-[#DF6B57] text-white rounded p-2 hover:bg-[#c85a47] transition-colors'>
+                                    <button onClick={()=>{ setSelectedProduct(product); setDeleteModal(true); }} className='bg-red-500 text-white rounded-lg p-2 hover:bg-red-600 transition-colors' title="Delete">
                                         <i className='bi bi-trash'></i>
                                     </button>
                                 </div>
@@ -297,8 +368,7 @@ const FarmerProducts = () => {
                 )}
             </tbody>
         </table>
-        </div>
-        )}
+        </div>        </div>        )}
 
         {/* Edit modal window */}
         <div className={showEditModal?'flex w-full h-screen justify-center overflow-y-scroll items-center fixed top-0 left-0 bg-black/50 bg-opacity-50 z-20':'hidden overflow-hidden'}>
