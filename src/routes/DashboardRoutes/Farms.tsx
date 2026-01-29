@@ -12,7 +12,7 @@ const Farms = () => {
     const [showEditModal, setShowEditModal] = React.useState<boolean>(false);
     const [showAddModal, setShowAddModal] = React.useState<boolean>(false);
     const [selectedFarm, setSelectedFarm] = React.useState<Farm | null>(null);
-    const [editForm, setEditForm] = React.useState<FarmCreateInput>({});
+    const [editForm, setEditForm] = React.useState<FarmCreateInput>({ name: '', location: '', size: '' });
     const [addForm, setAddForm] = React.useState<FarmCreateInput>({ name: '', location: '', size: '' });
 
 
