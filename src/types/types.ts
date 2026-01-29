@@ -24,3 +24,23 @@ export interface ForgotPasswordData {
     email: string;
 }
 
+// Types for farm data
+export interface FarmOwner {
+    id?: number | string;
+    name?: string;
+}
+
+export interface Farm {
+    id: number;
+    name: string;
+    location: string;
+    size: number | string; // backend may return string from inputs; normalize on save if needed
+    user?: FarmOwner | null;
+}
+
+export interface FarmCreateInput {
+    name: string;
+    location: string;
+    size: number | string;
+}
+

@@ -1,4 +1,3 @@
-import React from 'react'
 import { Images } from '../../constants/ImgImports'
 import FarmerDashboardLayout from '../../components/general/FarmerDashboardLayout'
 
