@@ -13,7 +13,7 @@ const ProductDetail = () => {
 
   React.useEffect(() => {
     axios.get(`http://localhost:5000/api/v1/product/${id}`)
-      .then(res => {
+      .then((res: any) => {
         setProduct(res.data.content);
         setLoading(false);
       })

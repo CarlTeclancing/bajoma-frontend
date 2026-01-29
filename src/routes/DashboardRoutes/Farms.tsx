@@ -1,24 +1,26 @@
 import React from 'react'
 import DashboardLayout from '../../components/general/DashboardLayout'
 import axios from 'axios';
+import type { Farm, FarmCreateInput } from '../../types/types.tsx';
+
+
+//interface FarmUpdateInput extends Partial<FarmCreateInput> {}
 
 const Farms = () => {
-    const [farms, setFarms] = React.useState<any[]>([]);
-    const [loading, setLoading] = React.useState(true);
-    const [showEditModal, setShowEditModal] = React.useState(false);
-    const [showAddModal, setShowAddModal] = React.useState(false);
-    const [selectedFarm, setSelectedFarm] = React.useState<any | null>(null);
-    const [editForm, setEditForm] = React.useState<any>({});
-    const [addForm, setAddForm] = React.useState<any>({});
+    const [farms, setFarms] = React.useState<Farm[]>([]);
+    const [loading, setLoading] = React.useState<boolean>(true);
+    const [showEditModal, setShowEditModal] = React.useState<boolean>(false);
+    const [showAddModal, setShowAddModal] = React.useState<boolean>(false);
+    const [selectedFarm, setSelectedFarm] = React.useState<Farm | null>(null);
+    const [editForm, setEditForm] = React.useState<FarmCreateInput>({ name: '', location: '', size: '' });
+    const [addForm, setAddForm] = React.useState<FarmCreateInput>({ name: '', location: '', size: '' });
 
-    React.useEffect(() => {
-        fetchFarms();
-    }, []);
+
 
     const fetchFarms = () => {
         axios.get('http://localhost:5000/api/v1/farm')
             .then(res => {
-                const data = Array.isArray(res.data.content) ? res.data.content : [];
+                const data = Array.isArray(res.data.content) ? (res.data.content as Farm[]) : [];
                 setFarms(data);
                 setLoading(false);
             })
@@ -28,9 +30,15 @@ const Farms = () => {
             });
     };
 
-    const handleEdit = (farm: any) => {
+        React.useEffect(() => {
+        fetchFarms();
+    }, []);
+
+
+    const handleEdit = (farm: Farm) => {
         setSelectedFarm(farm);
-        setEditForm({ ...farm });
+        // Only copy editable fields
+        setEditForm({ name: farm.name, location: farm.location, size: farm.size });
         setShowEditModal(true);
     };
 
@@ -39,6 +47,7 @@ const Farms = () => {
     };
 
     const handleEditSave = () => {
+        if (!selectedFarm) return;
         axios.put(`http://localhost:5000/api/v1/farm/${selectedFarm.id}`, editForm)
             .then(() => {
                 fetchFarms();
@@ -59,13 +68,13 @@ const Farms = () => {
         setAddForm({ ...addForm, [e.target.name]: e.target.value });
     };
 
-    const handleAddSave = (e: React.FormEvent) => {
+    const handleAddSave = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         axios.post('http://localhost:5000/api/v1/farm', addForm)
             .then(() => {
                 fetchFarms();
                 setShowAddModal(false);
-                setAddForm({});
+                setAddForm({ name: '', location: '', size: '' });
             })
             .catch(() => alert('Failed to add farm'));
     };

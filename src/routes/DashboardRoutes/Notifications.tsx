@@ -1,4 +1,3 @@
-import React from 'react'
 import DashboardLayout from '../../components/general/DashboardLayout'
 import axios from 'axios';
 import { BACKEND_URL } from '../../global';

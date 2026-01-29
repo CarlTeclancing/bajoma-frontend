@@ -1,4 +1,3 @@
-import React from 'react'
 import { Images } from '../../constants/ImgImports'
 import { Link } from 'react-router-dom'
 import ProductComponent from './ProductComponent'

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { Images } from '../../constants/ImgImports'
 import FarmerDashboardLayout from '../../components/general/FarmerDashboardLayout'
 import { useAuth } from '../../hooks/auth';
