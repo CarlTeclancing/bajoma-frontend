@@ -1,7 +1,7 @@
 import React from 'react'
 import DashboardLayout from '../../components/general/DashboardLayout'
 import axios from 'axios';
-import type { Farm, FarmOwner, FarmCreateInput } from '../../types/Farm';
+import type { Farm, FarmCreateInput } from '../../types/types.tsx';
 
 
 //interface FarmUpdateInput extends Partial<FarmCreateInput> {}

@@ -1,8 +1,8 @@
 import React from 'react'
 import { Images } from '../../constants/ImgImports'
 import { Link } from 'react-router-dom';
-import axios from 'axios';
-import { BACKEND_URL } from '../../global';
+//import axios from 'axios';
+//import { BACKEND_URL } from '../../global';
 
 const TopNavigation = () => {
     const [menuOpen, setMenuOpen] = React.useState(false);
