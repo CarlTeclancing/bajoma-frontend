@@ -37,7 +37,7 @@ export default function Navigation() {
               <li className='font-bold cursor-pointer nav-element'><Link to={"/"}>Home</Link></li>
               <li className='font-bold cursor-pointer nav-element'><Link to={"/about"}>About</Link></li>
               <li className='font-bold cursor-pointer nav-element'><Link to={"/shop"}>Shop</Link></li>
-              <li className='font-bold cursor-pointer nav-element'><Link to={"/products"}>Farm Products</Link></li>
+              <li className='font-bold cursor-pointer nav-element'><Link to={"/products"}>Farms</Link></li>
               <li className='font-bold cursor-pointer nav-element'><Link to={"/contact"}>Contact</Link></li>
           </ul>
 
@@ -93,7 +93,7 @@ export default function Navigation() {
               <li className='text-[1.5rem] m-2 text-center font-bold cursor-pointer nav-element'><Link to={"/"} onClick={()=>setMenuOpen(false)}>Home</Link></li>
               <li className='text-[1.5rem] m-2 text-center font-bold cursor-pointer nav-element'><Link to={"/about"} onClick={()=>setMenuOpen(false)}>About</Link></li>
               <li className='text-[1.5rem] m-2 text-center font-bold cursor-pointer nav-element'><Link to={"/shop"} onClick={()=>setMenuOpen(false)}>Shop</Link></li>
-              <li className='text-[1.5rem] m-2 text-center font-bold cursor-pointer nav-element'><Link to={"/products"} onClick={()=>setMenuOpen(false)}>Farm Products</Link></li>
+              <li className='text-[1.5rem] m-2 text-center font-bold cursor-pointer nav-element'><Link to={"/products"} onClick={()=>setMenuOpen(false)}>Farms</Link></li>
               <li className='text-[1.5rem] m-2 text-center font-bold cursor-pointer nav-element'><Link to={"/cart"} onClick={()=>setMenuOpen(false)}>
                 Cart {cartCount > 0 && `(${cartCount})`}
               </Link></li>

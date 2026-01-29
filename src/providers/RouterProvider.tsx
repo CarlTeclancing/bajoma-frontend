@@ -16,9 +16,11 @@ import Farms from "../routes/DashboardRoutes/Farms";
 import FarmerDashboard from "../routes/farmerRoutes/Index";
 import FarmerProducts from "../routes/farmerRoutes/Products";
 import FarmerOrders from "../routes/farmerRoutes/Orders";
+import FarmerSales from "../routes/farmerRoutes/Sales";
 import FarmerSupport from "../routes/farmerRoutes/Support";
 import FarmerSettings from "../routes/farmerRoutes/Settings";
 import FarmerNotifications from "../routes/farmerRoutes/Notifications";
+import FarmerMessages from "../routes/farmerRoutes/Messages";
 import ProductsPage from "../routes/ProductsPage";
 import Shop from "../routes/userRoutes/Shop";
 import ProductDetail from "../routes/userRoutes/ProductDetail";
@@ -121,6 +123,10 @@ const router = createBrowserRouter([
         element: <FarmerOrders />
     },
     {
+        path: '/farmer/sales',
+        element: <FarmerSales />
+    },
+    {
         path: '/farmer/support',
         element: <FarmerSupport />
     },
@@ -131,6 +137,10 @@ const router = createBrowserRouter([
     {
         path: '/farmer/notifications',
         element: <FarmerNotifications />
+    },
+    {
+        path: '/farmer/messages',
+        element: <FarmerMessages />
     },
 ])
 

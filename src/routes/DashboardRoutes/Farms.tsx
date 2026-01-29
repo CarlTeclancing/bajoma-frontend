@@ -81,50 +81,141 @@ const Farms = () => {
 
     return (
         <DashboardLayout>
-            <h1 className='font-bold text-2xl'>Farm Management</h1>
-            <p>Review and manage all registered farms</p>
-            <div className="flex full">
-                <div className="flex">
-                    <input type="text" placeholder='Search farms...' className='border border-gray-300 rounded p-2 m-2 w-64'/>
-                    <button className='bg-[#90C955] text-white rounded p-2 m-2'><i className='bi bi-search m-2'></i>Search</button>
+            <div className="flex justify-between items-center mb-6">
+                <div>
+                    <h1 className='font-bold text-2xl'>Farm Management</h1>
+                    <p className='text-gray-600'>Review and manage all registered farms</p>
                 </div>
-                <div className="flex ml-auto">
-                    <button onClick={()=>setShowAddModal(true)} className='bg-[#78C726] text-white rounded p-2 m-2'><i className='bi bi-plus-circle m-1'></i>Add New Farm</button>
-                </div>
+                <button onClick={()=>setShowAddModal(true)} className='bg-[#78C726] text-white rounded-lg px-4 py-2 flex items-center gap-2'>
+                    <i className='bi bi-plus-circle'></i>
+                    Add New Farm
+                </button>
             </div>
-            <div className="flex justify-end mt-12 w-full">
-                <button className='border border-[#90C955] text-[#90C955] rounded p-2 m-2'> <i className='bi bi-filter'></i> Filter</button>
+
+            <div className="flex gap-4 mb-6">
+                <input type="text" placeholder='Search farms...' className='flex-1 border border-gray-300 rounded-lg p-3'/>
+                <button className='bg-[#90C955] text-white rounded-lg px-6 py-3'>
+                    <i className='bi bi-search mr-2'></i>Search
+                </button>
+                <button className='border border-[#90C955] text-[#90C955] rounded-lg px-6 py-3'>
+                    <i className='bi bi-filter mr-2'></i>Filter
+                </button>
             </div>
+
             {loading ? (
-                <div className="mt-4">Loading farms...</div>
+                <div className="flex justify-center items-center py-12">
+                    <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-[#78C726]"></div>
+                    <p className='ml-4'>Loading farms...</p>
+                </div>
+            ) : farms.length === 0 ? (
+                <div className="text-center py-12">
+                    <i className='bi bi-house-door text-6xl text-gray-300'></i>
+                    <p className="text-gray-500 text-lg mt-4">No farms registered yet</p>
+                    <p className="text-gray-400">Click "Add New Farm" to register a farm</p>
+                </div>
             ) : (
-            <table className='w-full border-collapse border border-gray-300 mt-4'>
-                <thead>
-                    <tr>
-                        <th className='border border-gray-300 p-2'>Farm Name</th>
-                        <th className='border border-gray-300 p-2'>Location</th>
-                        <th className='border border-gray-300 p-2'>Size (acres)</th>
-                        <th className='border border-gray-300 p-2'>Owner</th>
-                        <th className='border border-gray-300 p-2'>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {farms.map(farm => (
-                        <tr key={farm.id}>
-                            <td className='border border-gray-300 p-2'>{farm.name}</td>
-                            <td className='border border-gray-300 p-2'>{farm.location}</td>
-                            <td className='border border-gray-300 p-2'>{farm.size}</td>
-                            <td className='border border-gray-300 p-2'>{farm.user?.name || 'N/A'}</td>
-                            <td className='border border-gray-300 p-2'>
-                                <div className='flex justify-end gap-2'>
-                                    <button onClick={()=>handleEdit(farm)} className='bg-[#78C726] text-white rounded p-2'><i className='bi bi-pencil'></i></button>
-                                    <button onClick={()=>handleDelete(farm.id)} className='bg-[#DF6B57] text-white rounded p-2'><i className='bi bi-trash'></i></button>
+                        <div key={farm.id} className="bg-white border-2 border-gray-200 rounded-2xl p-6 hover:border-[#90C955] transition-all hover:shadow-lg">
+                            <div className="flex justify-between items-start mb-4">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-12 h-12 bg-[#E6F2D9] rounded-full flex items-center justify-center">
+                                        <i className='bi bi-house-door text-2xl text-[#78C726]'></i>
+                                    </div>
+                                    <div>
+                                        <h3 className='font-bold text-lg text-gray-800'>{farm.name}</h3>
+                                        <p className='text-sm text-gray-500'>Farm ID: #{farm.id}</p>
+                                    </div>
                                 </div>
-                            </td>
-                        </tr>
+                                <span className='bg-green-100 text-green-600 text-xs px-3 py-1 rounded-full font-semibold'>
+                                    Active
+                                </span>
+                            </div>
+
+                            <div className="space-y-3 mb-4">
+                                <div className="flex items-start gap-2">
+                                    <i className='bi bi-geo-alt-fill text-[#78C726] mt-1'></i>
+                                    <div>
+                                        <p className='text-xs text-gray-500'>Location</p>
+                                        <p className='text-sm font-semibold text-gray-700'>{farm.location || 'Not specified'}</p>
+                                    </div>
+                                </div>
+
+                                <div className="flex items-start gap-2">
+                                    <i className='bi bi-rulers text-[#78C726] mt-1'></i>
+                                    <div>
+                                        <p className='text-xs text-gray-500'>Farm Size</p>
+                                        <p className='text-sm font-semibold text-gray-700'>{farm.size ? `${farm.size} acres` : 'Not specified'}</p>
+                                    </div>
+                                </div>
+
+                                <div className="flex items-start gap-2">
+                                    <i className='bi bi-person-fill text-[#78C726] mt-1'></i>
+                                    <div>
+                                        <p className='text-xs text-gray-500'>Owner</p>
+                                        <p className='text-sm font-semibold text-gray-700'>{farm.user?.name || 'Not assigned'}</p>
+                                        {farm.user?.email && (
+                                            <p className='text-xs text-gray-500'>{farm.user.email}</p>
+                                        )}
+                                    </div>
+                                </div>
+
+                                {farm.user?.phone && (
+                                    <div className="flex items-start gap-2">
+                                        <i className='bi bi-telephone-fill text-[#78C726] mt-1'></i>
+                                        <div>
+                                            <p className='text-xs text-gray-500'>Contact</p>
+                                            <p className='text-sm font-semibold text-gray-700'>{farm.user.phone}</p>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {farm.description && (
+                                    <div className="flex items-start gap-2">
+                                        <i className='bi bi-info-circle-fill text-[#78C726] mt-1'></i>
+                                        <div>
+                                            <p className='text-xs text-gray-500'>Description</p>
+                                            <p className='text-sm text-gray-700'>{farm.description}</p>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {farm.createdAt && (
+                                    <div className="flex items-start gap-2">
+                                        <i className='bi bi-calendar-check text-[#78C726] mt-1'></i>
+                                        <div>
+                                            <p className='text-xs text-gray-500'>Registered</p>
+                                            <p className='text-sm text-gray-700'>
+                                                {new Date(farm.createdAt).toLocaleDateString('en-US', { 
+                                                    year: 'numeric', 
+                                                    month: 'long', 
+                                                    day: 'numeric' 
+                                                })}
+                                            </p>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+
+                            <div className='flex gap-2 pt-4 border-t border-gray-200'>
+                                <button 
+                                    onClick={()=>handleEdit(farm)} 
+                                    className='flex-1 bg-[#78C726] text-white rounded-lg py-2 hover:bg-[#6ab31f] transition-colors flex items-center justify-center gap-2'
+                                >
+                                    <i className='bi bi-pencil'></i>
+                                    Edit
+                                </button>
+                                <button 
+                                    onClick={()=>handleDelete(farm.id)} 
+                                    className='flex-1 bg-[#DF6B57] text-white rounded-lg py-2 hover:bg-[#c95d4a] transition-colors flex items-center justify-center gap-2'
+                                >
+                                    <i className='bi bi-trash'></i>
+                                    Delete
+                                </button>
+                            </div>
+                        </div>
                     ))}
-                </tbody>
-            </table>
+                </div>
             )}
 
             {/* Edit Modal */}
