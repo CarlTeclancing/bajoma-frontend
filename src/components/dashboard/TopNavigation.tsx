@@ -3,24 +3,44 @@ import { Images } from '../../constants/ImgImports'
 import { Link } from 'react-router-dom';
 import axios from 'axios';
 import { BACKEND_URL } from '../../global';
+import { useAuth } from '../../hooks/auth';
 
 const TopNavigation = () => {
     const [menuOpen, setMenuOpen] = React.useState(false);
     const [change, setChange] = React.useState(0);
-    const [user, setUser] = React.useState<any>(null);
+    const [pendingOrdersCount, setPendingOrdersCount] = React.useState(0);
+    const { currentUser } = useAuth();
     const location = window.location.pathname;
     const isFarmerDashboard = location.startsWith('/farmer');
 
+    // Fetch pending orders count for farmers
     React.useEffect(() => {
-        const storedUser = localStorage.getItem('user');
-        if (storedUser) {
-            try {
-                setUser(JSON.parse(storedUser));
-            } catch (error) {
-                console.error('Error parsing user data:', error);
-            }
+        if (isFarmerDashboard && currentUser) {
+            fetchPendingOrders();
+            
+            // Refresh every 30 seconds
+            const interval = setInterval(fetchPendingOrders, 30000);
+            return () => clearInterval(interval);
         }
-    }, []);
+    }, [isFarmerDashboard, currentUser]);
+
+    const fetchPendingOrders = async () => {
+        try {
+            const response = await axios.get(`${BACKEND_URL}/orders`);
+            const allOrders = Array.isArray(response.data.content) ? response.data.content : [];
+            
+            // Filter pending orders for farmer's products
+            const farmerPendingOrders = allOrders.filter((order: any) => 
+                order.Product && 
+                order.Product.user_id === currentUser?.id &&
+                order.status?.toLowerCase() === 'pending'
+            );
+            
+            setPendingOrdersCount(farmerPendingOrders.length);
+        } catch (error) {
+            console.error('Error fetching pending orders:', error);
+        }
+    };
   return (
 
     <>
@@ -35,9 +55,9 @@ const TopNavigation = () => {
               </Link>
                 <img src={Images.profileimg} alt="profile" className='w-10 h-10 rounded-full ml-4'/>
                 <div className='flex flex-col ml-2'>
-                    <span className='font-semibold'>{user?.name || 'User'}</span>
-                    <span className='text-xs text-gray-500'>{user?.email || ''}</span>
-                    <span className='text-xs text-gray-400'>{user?.phone || ''} • {user?.account_type || ''}</span>
+                    <span className='font-semibold'>{currentUser?.name || 'User'}</span>
+                    <span className='text-xs text-gray-500'>{currentUser?.email || ''}</span>
+                    <span className='text-xs text-gray-400'>{currentUser?.phone || ''} • {currentUser?.account_type || ''}</span>
                 </div>
             </div>
             
@@ -52,13 +72,20 @@ const TopNavigation = () => {
               </button>
           
             <div className='flex items-center'>
-              <Link to={isFarmerDashboard ? '/farmer/notifications' : '/dashboard/notifications'}>
-                <button className='border border-[#90C955] rounded'><i className='bi bi-bell text-2xl text-[#90C955] m-2'></i></button>
+              <Link to={isFarmerDashboard ? '/farmer/notifications' : '/dashboard/notifications'} className='relative'>
+                <button className='border border-[#90C955] rounded relative'>
+                  <i className='bi bi-bell text-2xl text-[#90C955] m-2'></i>
+                  {isFarmerDashboard && pendingOrdersCount > 0 && (
+                    <span className='absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold'>
+                      {pendingOrdersCount}
+                    </span>
+                  )}
+                </button>
               </Link>
                 <img src={Images.profileimg} alt="profile" className='w-10 h-10 rounded-full ml-4'/>
                 <div className='flex flex-col ml-2'>
-                    <span className='font-semibold text-sm'>{user?.name || 'User'}</span>
-                    <span className='text-xs text-gray-500'>{user?.account_type || ''}</span>
+                    <span className='font-semibold text-sm'>{currentUser?.name || 'User'}</span>
+                    <span className='text-xs text-gray-500'>{currentUser?.account_type || ''}</span>
                 </div>
             </div>
         </nav>

@@ -1,8 +1,40 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import { Images } from '../../constants/ImgImports'
 import FarmerDashboardLayout from '../../components/general/FarmerDashboardLayout'
+import { useAuth } from '../../hooks/auth';
 
 const FarmerSettings = () => {
+  const { currentUser } = useAuth();
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    phone: '',
+  });
+
+  useEffect(() => {
+    if (currentUser) {
+      setFormData({
+        name: currentUser.name || '',
+        email: currentUser.email || '',
+        phone: currentUser.phone || '',
+      });
+    }
+  }, [currentUser]);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value
+    });
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    // TODO: Implement API call to update user settings
+    console.log('Update settings:', formData);
+    alert('Settings update functionality coming soon!');
+  };
+
   return (
     <FarmerDashboardLayout>
         <h1 className='text-2xl font-bold'>Settings</h1>
@@ -15,44 +47,68 @@ const FarmerSettings = () => {
             <div className="flex w-full mt-4 justify-items-start items-start">
                 <img src={Images.profileimg} className='w-[200px]' alt="profile image" />
                 <div className="flex flex-col w-full items-start ml-8">
-                    <h2 className='text-2xl'>Clarkson Administrator</h2>
-                    <span className='bg-amber-300 rounded-4xl p-2 mt-4'>Admin</span>
+                    <h2 className='text-2xl'>{currentUser?.name || 'User'}</h2>
+                    <span className='bg-amber-300 rounded-4xl p-2 mt-4'>{currentUser?.account_type || 'User'}</span>
                 </div>
             </div>
-                <form action="" className="flex w-full flex-col">
+                <form onSubmit={handleSubmit} className="flex w-full flex-col">
                     <div className="flex w-full justify-between mt-4">
                         <div className='w-[48%]'>
                             <label htmlFor="name">Full Name</label>
-                            <input type="text" name='name' className='w-full p-2 border border-gray rounded' />
+                            <input 
+                              type="text" 
+                              name='name' 
+                              value={formData.name}
+                              onChange={handleChange}
+                              className='w-full p-2 border border-gray rounded' 
+                            />
                         </div>
                         <div className='w-[48%]'>
-                            <label htmlFor="name">Email</label>
-                            <input type="email" name='email' className='w-full p-2 border border-gray rounded' />
+                            <label htmlFor="email">Email</label>
+                            <input 
+                              type="email" 
+                              name='email' 
+                              value={formData.email}
+                              className='w-full p-2 border border-gray rounded bg-gray-100' 
+                              disabled
+                            />
                         </div>
                     </div>
                     <div className="flex w-full justify-between mt-4">
                         <div className='w-[48%]'>
-                            <label htmlFor="name">Phone Number</label>
-                            <input type="number" name='name' className='w-full p-2 border border-gray rounded' />
+                            <label htmlFor="phone">Phone Number</label>
+                            <input 
+                              type="tel" 
+                              name='phone' 
+                              value={formData.phone}
+                              onChange={handleChange}
+                              className='w-full p-2 border border-gray rounded' 
+                            />
                         </div>
                         <div className='w-[48%]'>
-                            <label htmlFor="name">Role</label>
-                            <input type="Text" name='email' className='w-full p-2 border border-gray rounded' />
+                            <label htmlFor="role">Role</label>
+                            <input 
+                              type="text" 
+                              name='role' 
+                              value={currentUser?.account_type || ''}
+                              className='w-full p-2 border border-gray rounded bg-gray-100' 
+                              disabled
+                            />
                         </div>
                     </div>
                     <div className="flex w-full justify-between mt-4">
                         <div className='w-[48%]'>
-                            <label htmlFor="name">Languate</label>
-                            <input type="text" name='name' className='w-full p-2 border border-gray rounded' />
+                            <label htmlFor="language">Language</label>
+                            <input type="text" name='language' defaultValue="English" className='w-full p-2 border border-gray rounded' />
                         </div>
                         <div className='w-[48%]'>
-                            <label htmlFor="name">Time Zone</label>
-                            <input type="email" name='email' className='w-full p-2 border border-gray rounded' />
+                            <label htmlFor="timezone">Time Zone</label>
+                            <input type="text" name='timezone' defaultValue="UTC" className='w-full p-2 border border-gray rounded' />
                         </div>
                     </div>
                     <div className="flex w-full justify-between mt-8">
-                        <span className='border p-4 rounded border-green text-green-500'> Change Password</span>
-                        <button className='cursor-pointer p-4 rounded bg-green-500 text-white'>Update Profile</button>
+                        <span className='border p-4 rounded border-green text-green-500 cursor-pointer'> Change Password</span>
+                        <button type="submit" className='cursor-pointer p-4 rounded bg-green-500 text-white'>Update Profile</button>
                     </div>
                     
                 </form>

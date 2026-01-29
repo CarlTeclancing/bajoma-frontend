@@ -1,16 +1,16 @@
 import React from 'react';
 import FarmerDashboardLayout from '../../components/general/FarmerDashboardLayout';
 import axios from 'axios';
-import { BACKEND_URL } from '../../global';
-
+import { BACKEND_URL } from '../../global';import { authStorage } from '../../config/storage.config';
 const FarmerOrders = () => {
     const [orders, setOrders] = React.useState<any[]>([]);
     const [loading, setLoading] = React.useState(true);
     const [products, setProducts] = React.useState<any[]>([]);
+    const [refreshKey, setRefreshKey] = React.useState(0);
 
-    // Get current user from localStorage
+    // Get current user from storage
     const getCurrentUser = () => {
-        const userStr = localStorage.getItem('user');
+        const userStr = authStorage.getItem('user');
         return userStr ? JSON.parse(userStr) : null;
     };
 
@@ -19,7 +19,14 @@ const FarmerOrders = () => {
     React.useEffect(() => {
         fetchOrders();
         fetchProducts();
-    }, []);
+        
+        // Auto-refresh every 30 seconds to check for new orders
+        const interval = setInterval(() => {
+            fetchOrders();
+        }, 30000);
+        
+        return () => clearInterval(interval);
+    }, [refreshKey]);
 
     const fetchProducts = async () => {
         try {
@@ -60,6 +67,13 @@ const FarmerOrders = () => {
         }
     };
 
+    const handleRefresh = () => {
+        setLoading(true);
+        setRefreshKey(prev => prev + 1);
+    };
+
+    const pendingOrders = orders.filter(order => order.status?.toLowerCase() === 'pending');
+
     const handleMarkDelivered = async (orderId: number) => {
         try {
             await axios.put(`${BACKEND_URL}/orders/${orderId}`, { status: 'delivered' });
@@ -90,8 +104,29 @@ const FarmerOrders = () => {
 
     return (
         <FarmerDashboardLayout>
-            <h1 className='text-2xl'>Order Management</h1>
-            <p>View and manage orders for your products</p>
+            <div className='flex justify-between items-center mb-6'>
+                <div>
+                    <h1 className='text-2xl font-bold'>Order Management</h1>
+                    <p className='text-gray-600'>Orders for your products • Auto-refreshes every 30s</p>
+                </div>
+                <div className='flex gap-4 items-center'>
+                    {pendingOrders.length > 0 && (
+                        <div className='bg-amber-500 text-white px-4 py-2 rounded-lg font-semibold animate-pulse'>
+                            <i className='bi bi-bell-fill mr-2'></i>
+                            {pendingOrders.length} New Order{pendingOrders.length !== 1 ? 's' : ''}
+                        </div>
+                    )}
+                    <button 
+                        onClick={handleRefresh}
+                        className='bg-[#90C955] text-white px-4 py-2 rounded-lg hover:bg-[#7ab043] flex items-center gap-2'
+                        disabled={loading}
+                    >
+                        <i className={`bi bi-arrow-clockwise ${loading ? 'animate-spin' : ''}`}></i>
+                        {loading ? 'Loading...' : 'Refresh'}
+                    </button>
+                </div>
+            </div>
+            
             <div className="flex w-full flex-col gap-4">
                 {orders.length === 0 ? (
                     <div className="text-center py-12">

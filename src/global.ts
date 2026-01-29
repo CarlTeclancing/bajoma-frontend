@@ -1,11 +1,12 @@
 import axios from 'axios';
+import { authStorage } from './config/storage.config';
 
 export const BACKEND_URL:string ="http://localhost:5000/api/v1";
 
 // Set up axios interceptor to add token to all requests
 axios.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('token');
+    const token = authStorage.getItem('token');
     console.log('Making request to:', config.url);
     console.log('Token present:', !!token);
     if (token) {
@@ -33,8 +34,8 @@ axios.interceptors.response.use(
       const currentPath = window.location.pathname;
       // Don't redirect if already on login or public pages
       if (!currentPath.includes('/login') && !currentPath.includes('/shop') && !currentPath.includes('/')) {
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
+        authStorage.removeItem('token');
+        authStorage.removeItem('user');
         window.location.href = '/login';
       }
     }

@@ -47,6 +47,15 @@ const SideBarFarmer = () => {
                 <i className="bi bi-chevron-right"></i>
             </Link>
             <Link 
+              to={'/farmer/sales'} 
+              onClick={()=> setChange(10)}
+              className={location==='/farmer/sales'?'w-[90%] h-12 text-white bg-[#90C955] p-4 mt-4 flex items-center justify-between rounded':'w-[90%] h-12 text-black p-4 mt-4 flex items-center justify-between rounded'}>
+                <div>
+                <i className="bi m-2 bi-graph-up"></i><span>Sales</span>
+                </div>
+                <i className="bi bi-chevron-right"></i>
+            </Link>
+            <Link 
               to={'/farmer/messages'} 
               onClick={()=> setChange(5)}
               className={location==='/farmer/messages'?'w-[90%] h-12 text-white bg-[#90C955] p-4 mt-4 flex items-center justify-between rounded':'w-[90%] h-12 text-black p-4 mt-4 flex items-center justify-between rounded'}>

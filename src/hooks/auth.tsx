@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import axios from 'axios';
 import type { AxiosResponse } from 'axios';
 import { BACKEND_URL } from '../global.ts';
 import type { LoginData, RegisterData, ForgotPasswordData } from '../types/types';
 import { useNavigate } from "react-router-dom";
+import { authStorage, ENABLE_CROSS_TAB_SYNC } from '../config/storage.config';
 
 
 interface AuthResponse {
@@ -15,7 +16,61 @@ interface AuthResponse {
 const useAuth = () => {
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
-    const navigate = useNavigate();
+  const [currentUser, setCurrentUser] = useState<any>(null);
+  const navigate = useNavigate();
+
+  // Load user from storage on mount only
+  useEffect(() => {
+    const userStr = authStorage.getItem('user');
+    if (userStr) {
+      try {
+        setCurrentUser(JSON.parse(userStr));
+      } catch (error) {
+        console.error('Error parsing user data:', error);
+        authStorage.removeItem('user');
+      }
+    }
+  }, []); // Empty dependency array - only run on mount
+
+  // Separate effect for storage event listener (only in localStorage mode)
+  useEffect(() => {
+    if (!ENABLE_CROSS_TAB_SYNC) {
+      // Skip cross-tab sync in sessionStorage mode (development)
+      return;
+    }
+
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'user' && e.newValue) {
+        try {
+          const newUser = JSON.parse(e.newValue);
+          const currentUserStr = authStorage.getItem('user');
+          const prevUser = currentUserStr ? JSON.parse(currentUserStr) : null;
+          
+          // If another tab logged in with a different user, reload
+          if (prevUser && newUser.id !== prevUser.id) {
+            console.log('User changed in another tab, reloading...');
+            window.location.reload();
+          }
+        } catch (error) {
+          console.error('Error parsing user from storage event:', error);
+        }
+      } else if (e.key === 'user' && !e.newValue) {
+        // User was logged out in another tab
+        authStorage.clear();
+        window.location.href = '/login';
+      } else if (e.key === 'token' && !e.newValue) {
+        // Token was removed in another tab
+        authStorage.clear();
+        window.location.href = '/login';
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+    };
+  }, []); // Empty dependency array
 
 
   const login = async (data: LoginData): Promise<AuthResponse> => {
@@ -24,12 +79,13 @@ const useAuth = () => {
     try {
       const response: AxiosResponse<any> = await axios.post(`${BACKEND_URL}/auth/login`, data);
       
-      // Store token and user data in localStorage
+      // Store token and user data in storage
       if (response.data.access_token) {
-        localStorage.setItem('token', response.data.access_token);
+        authStorage.setItem('token', response.data.access_token);
       }
       if (response.data.user) {
-        localStorage.setItem('user', JSON.stringify(response.data.user));
+        authStorage.setItem('user', JSON.stringify(response.data.user));
+        setCurrentUser(response.data.user);
       }
       
       // Redirect based on user type
@@ -70,12 +126,12 @@ const useAuth = () => {
     try {
       const response: AxiosResponse<any> = await axios.post(`${BACKEND_URL}/auth/register`, data);
       
-      // Store token and user data in localStorage
+      // Store token and user data in storage
       if (response.data.access_token) {
-        localStorage.setItem('token', response.data.access_token);
+        authStorage.setItem('token', response.data.access_token);
       }
       if (response.data.user) {
-        localStorage.setItem('user', JSON.stringify(response.data.user));
+        authStorage.setItem('user', JSON.stringify(response.data.user));
       }
       
       // Redirect to appropriate dashboard
@@ -123,22 +179,23 @@ const useAuth = () => {
   };
 
   const logout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    localStorage.removeItem('cart');
+    authStorage.removeItem('token');
+    authStorage.removeItem('user');
+    authStorage.removeItem('cart');
+    setCurrentUser(null);
     navigate('/login');
   };
 
   const getCurrentUser = () => {
-    const userStr = localStorage.getItem('user');
-    return userStr ? JSON.parse(userStr) : null;
+    return currentUser;
   };
 
   const isAuthenticated = () => {
-    return !!localStorage.getItem('token');
+    return !!authStorage.getItem('token') && !!currentUser;
   };
 
-  return { login, register, forgotPassword, logout, getCurrentUser, isAuthenticated, loading, error };
+  return { login, register, forgotPassword, logout, getCurrentUser, isAuthenticated, loading, error, currentUser };
 };
 
+export { useAuth };
 export default useAuth;
