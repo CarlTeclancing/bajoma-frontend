@@ -2,7 +2,6 @@ import React from 'react'
 import FarmerDashboardLayout from '../../components/general/FarmerDashboardLayout';
 import axios from 'axios';
 import { BACKEND_URL } from '../../global';
-import { authStorage } from '../../config/storage.config';
 
 const FarmerMessages = () => {
   const [users, setUsers] = React.useState<any[]>([]);
@@ -16,7 +15,7 @@ const FarmerMessages = () => {
 
   React.useEffect(() => {
     fetchUsers();
-    const storedUser = authStorage.getItem('user');
+    const storedUser = localStorage.getItem('user');
     if (storedUser) {
       setCurrentUser(JSON.parse(storedUser));
     }
@@ -112,24 +111,20 @@ const FarmerMessages = () => {
 
   return (
     <FarmerDashboardLayout>
-      <div className='flex justify-between items-center mb-6'>
-        <div>
-          <h1 className='font-bold text-2xl'>Messages</h1>
-          <p className='text-gray-600'>Chat with customers</p>
-        </div>
-      </div>
+      <h1 className='font-bold text-2xl'>Messages</h1>
+      <p>Chat with users</p>
       
-      <div className="flex gap-0 h-[calc(100vh-250px)] border-2 border-[#90C955] rounded-2xl overflow-hidden bg-white">
+      <div className="flex gap-0 mt-6 h-[calc(100vh-200px)] border border-gray-200 rounded-lg overflow-hidden">
         {/* Users List - Chat Sidebar */}
-        <div className="w-80 bg-white border-r-2 border-[#90C955] flex flex-col">
-          <div className="p-4 border-b-2 border-[#E6F2D9] bg-[#E6F2D9]">
-            <h2 className='text-lg font-bold mb-3 text-gray-800'>Conversations</h2>
+        <div className="w-80 bg-white border-r border-gray-200 flex flex-col">
+          <div className="p-4 border-b border-gray-200">
+            <h2 className='text-lg font-bold mb-3'>Conversations</h2>
             <input 
               type="text" 
               placeholder="Search users..." 
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full p-2 border-2 border-[#90C955] rounded-lg text-sm focus:outline-none focus:border-[#78C726]"
+              className="w-full p-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-[#78C726]"
             />
           </div>
 
@@ -146,22 +141,22 @@ const FarmerMessages = () => {
                   <div
                     key={user.id}
                     onClick={() => setSelectedUser(user)}
-                    className={`p-4 cursor-pointer transition-colors border-b border-gray-100 hover:bg-[#E6F2D9] ${
-                      selectedUser?.id === user.id ? 'bg-[#E6F2D9] border-l-4 border-l-[#78C726]' : ''
+                    className={`p-4 cursor-pointer transition-colors border-b border-gray-100 hover:bg-gray-50 ${
+                      selectedUser?.id === user.id ? 'bg-[#E6F2D9]' : ''
                     }`}
                   >
                     <div className="flex items-center gap-3">
                       <div className={`w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0 ${
-                        selectedUser?.id === user.id ? 'bg-[#78C726] text-white' : 'bg-[#E6F2D9] text-[#78C726]'
+                        selectedUser?.id === user.id ? 'bg-[#78C726] text-white' : 'bg-gray-200 text-gray-600'
                       }`}>
                         <i className='bi bi-person text-xl'></i>
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="font-semibold text-sm truncate text-gray-800">{user.name}</p>
+                        <p className="font-semibold text-sm truncate">{user.name}</p>
                         <p className="text-xs text-gray-500 truncate">{user.email}</p>
                       </div>
                       {user.role && (
-                        <span className="text-xs px-2 py-1 rounded bg-[#E6F2D9] text-[#78C726] border border-[#90C955] flex-shrink-0 font-medium">
+                        <span className="text-xs px-2 py-1 rounded bg-gray-100 text-gray-600 flex-shrink-0">
                           {user.role}
                         </span>
                       )}
@@ -178,15 +173,15 @@ const FarmerMessages = () => {
           {selectedUser ? (
             <>
               {/* Chat Header */}
-              <div className="bg-[#E6F2D9] p-4 border-b-2 border-[#90C955] flex items-center gap-3">
+              <div className="bg-white p-4 border-b border-gray-200 flex items-center gap-3">
                 <div className="w-10 h-10 bg-[#78C726] rounded-full flex items-center justify-center text-white">
                   <i className='bi bi-person text-lg'></i>
                 </div>
                 <div className="flex-1">
-                  <p className="font-semibold text-gray-800">{selectedUser.name}</p>
-                  <p className="text-xs text-gray-600">{selectedUser.email}</p>
+                  <p className="font-semibold">{selectedUser.name}</p>
+                  <p className="text-xs text-gray-500">{selectedUser.email}</p>
                 </div>
-                <span className="text-xs px-3 py-1 rounded-full bg-[#78C726] text-white border border-[#90C955]">
+                <span className="text-xs px-3 py-1 rounded-full bg-green-100 text-green-600">
                   <i className='bi bi-circle-fill text-[6px] mr-1'></i>
                   Online
                 </span>
@@ -208,7 +203,7 @@ const FarmerMessages = () => {
                           <div className={`rounded-2xl px-4 py-2 ${
                             isMyMessage 
                               ? 'bg-[#78C726] text-white rounded-br-none' 
-                              : 'bg-white text-gray-800 rounded-bl-none border-2 border-[#E6F2D9]'
+                              : 'bg-white text-gray-800 rounded-bl-none shadow-sm'
                           }`}>
                             <p className="text-sm break-words">{msg.content}</p>
                           </div>
@@ -224,14 +219,14 @@ const FarmerMessages = () => {
               </div>
 
               {/* Message Input */}
-              <div className="bg-white p-4 border-t-2 border-[#90C955]">
+              <div className="bg-white p-4 border-t border-gray-200">
                 <form onSubmit={handleSendMessage} className="flex gap-3">
                   <input
                     type="text"
                     value={messageText}
                     onChange={(e) => setMessageText(e.target.value)}
                     placeholder="Type a message..."
-                    className="flex-1 p-3 border-2 border-[#90C955] rounded-full focus:outline-none focus:border-[#78C726] text-sm"
+                    className="flex-1 p-3 border border-gray-300 rounded-full focus:outline-none focus:border-[#78C726] text-sm"
                   />
                   <button 
                     type="submit"
