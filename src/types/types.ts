@@ -28,6 +28,8 @@ export interface ForgotPasswordData {
 export interface FarmOwner {
     id?: number | string;
     name?: string;
+    email?: string;
+    phone?: string;
 }
 
 export interface Farm {
@@ -36,6 +38,8 @@ export interface Farm {
     location: string;
     size: number | string; // backend may return string from inputs; normalize on save if needed
     user?: FarmOwner | null;
+    description?: string;
+    createdAt?: string;
 }
 
 export interface FarmCreateInput {
