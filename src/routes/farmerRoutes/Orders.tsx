@@ -28,7 +28,6 @@ const FarmerOrders = () => {
         return () => clearInterval(interval);
     }, [refreshKey]);
 
-<<<<<<< HEAD
     const fetchProducts = async () => {
         try {
             const response = await axios.get(`${BACKEND_URL}/product`);
@@ -40,8 +39,6 @@ const FarmerOrders = () => {
         }
     };
 
-=======
->>>>>>> e97a5c913d2cad93495ede8957f2c111fc0bbe7b
     const fetchOrders = async () => {
         try {
             const response = await axios.get(`${BACKEND_URL}/orders`);

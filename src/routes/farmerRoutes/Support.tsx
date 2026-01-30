@@ -1,3 +1,4 @@
+import React from 'react';
 import FarmerDashboardLayout from '../../components/general/FarmerDashboardLayout'
 
 const FarmerSupport = () => {
