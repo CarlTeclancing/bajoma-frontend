@@ -88,7 +88,7 @@ const FarmerSales = () => {
                         price: product.price
                     };
                 })
-                .sort((a, b) => b.orders - a.orders)
+                .sort((a: any, b: any) => b.orders - a.orders)
                 .slice(0, 5);
 
             setSalesData(productSales);
