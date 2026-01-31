@@ -103,121 +103,225 @@ const User = () => {
 
   return (
     <DashboardLayout>
-        <h1 className='text-2xl'>User Management</h1>
-        <p>View and manage all users</p>
-        <div className="flex w-full flex-col gap-2 mt-4">
-            <div className="flex w-auto gap-2">
-                <button 
-                    onClick={() => setFilter('all')}
-                    className={`outline-2 outline-[#78C726] font-bold rounded p-2 cursor-pointer ${
-                        filter === 'all' ? 'bg-[#78C726] text-white' : 'bg-white text-[#78C726]'
-                    }`}
-                >
-                    All Users ({userCounts.all})
-                </button>
-                <button 
-                    onClick={() => setFilter('farmer')}
-                    className={`outline-2 outline-[#78C726] font-bold rounded p-2 cursor-pointer ${
-                        filter === 'farmer' ? 'bg-[#78C726] text-white' : 'bg-white text-[#78C726]'
-                    }`}
-                >
-                    Farmers ({userCounts.farmer})
-                </button>
-                <button 
-                    onClick={() => setFilter('buyer')}
-                    className={`outline-2 outline-[#78C726] font-bold rounded p-2 cursor-pointer ${
-                        filter === 'buyer' ? 'bg-[#78C726] text-white' : 'bg-white text-[#78C726]'
-                    }`}
-                >
-                    Buyers ({userCounts.buyer})
-                </button>
-                <button 
-                    onClick={() => setFilter('admin')}
-                    className={`outline-2 outline-[#78C726] font-bold rounded p-2 cursor-pointer ${
-                        filter === 'admin' ? 'bg-[#78C726] text-white' : 'bg-white text-[#78C726]'
-                    }`}
-                >
-                    Admins ({userCounts.admin})
-                </button>
+        <h1 className='text-2xl font-bold'>User Management</h1>
+        <p className='text-gray-600'>View and manage all platform users</p>
+
+        {/* Stats Cards */}
+        <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mt-6'>
+            <div className="bg-white rounded-2xl p-6 border-2 border-gray-200 hover:border-[#90C955] transition-all">
+                <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 bg-[#E6F2D9] rounded-lg flex items-center justify-center">
+                        <i className='bi bi-people text-2xl text-[#78C726]'></i>
+                    </div>
+                    <div>
+                        <p className='text-sm text-gray-600'>Total Users</p>
+                        <h2 className='text-2xl font-bold text-gray-800'>{userCounts.all}</h2>
+                    </div>
+                </div>
             </div>
 
-            {loading ? (
-                <div className="text-center py-12">
-                    <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-[#78C726]"></div>
-                    <p className='mt-4 text-gray-600'>Loading users...</p>
+            <div className="bg-white rounded-2xl p-6 border-2 border-gray-200 hover:border-[#90C955] transition-all">
+                <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 bg-[#E6F2D9] rounded-lg flex items-center justify-center">
+                        <i className='bi bi-person-badge text-2xl text-[#78C726]'></i>
+                    </div>
+                    <div>
+                        <p className='text-sm text-gray-600'>Farmers</p>
+                        <h2 className='text-2xl font-bold text-gray-800'>{userCounts.farmer}</h2>
+                    </div>
                 </div>
-            ) : (
-        <table className='border rounded-2xl border-gray-300 mt-4 w-full'>
-            <thead>
-                <tr>
-                    <th className='p-2 text-left'>Name</th>
-                    <th className='p-2 text-left'>Phone</th>
-                    <th className='p-2 text-left'>Email</th>
-                    <th className='p-2 text-left'>Role</th>
-                    <th className='p-2 text-left'>Address</th>
-                    <th className='p-2 text-left'>Joined</th>
-                    <th className='p-2 text-left'>Total Orders</th>
-                    <th className='p-2 text-left'>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                {filteredUsers.length === 0 ? (
-                    <tr>
-                        <td colSpan={8} className='p-8 text-center text-gray-500'>
-                            No users found
-                        </td>
-                    </tr>
-                ) : (
-                    filteredUsers.map(user => (
-                        <tr key={user.id}>
-                            <td className='p-2'>{user.name || 'N/A'}</td>
-                            <td className='p-2'>{user.phone || 'N/A'}</td>
-                            <td className='p-2'>{user.email || 'N/A'}</td>
-                            <td className='p-2'>
-                                <span className={`px-3 py-1 rounded text-xs font-semibold ${
-                                    user.account_type?.toLowerCase() === 'admin' ? 'bg-[#FF9A00]' : 
-                                    (user.account_type?.toLowerCase() === 'seller' || user.account_type?.toLowerCase() === 'farmer') ? 'bg-[#78C726]' : 
-                                    (user.account_type?.toLowerCase() === 'buyer' || user.account_type?.toLowerCase() === 'user') ? 'bg-[#90C955]' : 
-                                    'bg-gray-400'
-                                } text-white uppercase`}>
-                                    {user.account_type ? (
-                                        user.account_type.toLowerCase() === 'seller' ? 'FARMER' : 
-                                        user.account_type.toLowerCase() === 'farmer' ? 'FARMER' :
-                                        user.account_type.toLowerCase() === 'buyer' ? 'USER' : 
-                                        user.account_type.toLowerCase() === 'user' ? 'USER' :
-                                        user.account_type.toUpperCase()
-                                    ) : 'N/A'}
-                                </span>
-                            </td>
-                            <td className='p-2'>{user.address || 'N/A'}</td>
-                            <td className='p-2'>{user.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'N/A'}</td>
-                            <td className='p-2'>{user.ordersCount || 0}</td>
-                            <td className='p-2'>
-                                <div className="flex gap-2">
-                                    <button 
-                                        onClick={() => handleViewClick(user)}
-                                        className='bg-[#78C726] text-white rounded p-2 hover:bg-[#6ab31f] transition-colors'>
-                                        <i className='bi bi-eye'></i>
-                                    </button>
-                                    <button 
-                                        onClick={() => handleEditClick(user)}
-                                        className='bg-[#90C955] text-white rounded p-2 hover:bg-[#7ab845] transition-colors'>
-                                        <i className='bi bi-pencil'></i>
-                                    </button>
-                                    <button 
-                                        onClick={() => { setSelectedUser(user); setDeleteModal(true); }}
-                                        className='bg-[#DF6B57] text-white rounded p-2 hover:bg-[#c85a47] transition-colors'>
-                                        <i className='bi bi-trash'></i>
-                                    </button>
-                                </div>
-                            </td>
-                        </tr>
-                    ))
-                )}
-            </tbody>
-        </table>
-            )}
+            </div>
+
+            <div className="bg-white rounded-2xl p-6 border-2 border-gray-200 hover:border-[#90C955] transition-all">
+                <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                        <i className='bi bi-cart text-2xl text-blue-600'></i>
+                    </div>
+                    <div>
+                        <p className='text-sm text-gray-600'>Buyers</p>
+                        <h2 className='text-2xl font-bold text-gray-800'>{userCounts.buyer}</h2>
+                    </div>
+                </div>
+            </div>
+
+            <div className="bg-white rounded-2xl p-6 border-2 border-gray-200 hover:border-amber-400 transition-all">
+                <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 bg-amber-100 rounded-lg flex items-center justify-center">
+                        <i className='bi bi-shield-check text-2xl text-amber-600'></i>
+                    </div>
+                    <div>
+                        <p className='text-sm text-gray-600'>Admins</p>
+                        <h2 className='text-2xl font-bold text-gray-800'>{userCounts.admin}</h2>
+                    </div>
+                </div>
+            </div>
         </div>
+
+        {/* Filter Buttons */}
+        <div className="flex flex-wrap gap-3 mt-6">
+            <button 
+                onClick={() => setFilter('all')}
+                className={`px-6 py-3 rounded-xl font-semibold transition-all ${
+                    filter === 'all' 
+                        ? 'bg-[#78C726] text-white' 
+                        : 'bg-white border-2 border-gray-200 text-gray-700 hover:border-[#90C955]'
+                }`}
+            >
+                All Users ({userCounts.all})
+            </button>
+            <button 
+                onClick={() => setFilter('farmer')}
+                className={`px-6 py-3 rounded-xl font-semibold transition-all ${
+                    filter === 'farmer' 
+                        ? 'bg-[#78C726] text-white' 
+                        : 'bg-white border-2 border-gray-200 text-gray-700 hover:border-[#90C955]'
+                }`}
+            >
+                Farmers ({userCounts.farmer})
+            </button>
+            <button 
+                onClick={() => setFilter('buyer')}
+                className={`px-6 py-3 rounded-xl font-semibold transition-all ${
+                    filter === 'buyer' 
+                        ? 'bg-[#78C726] text-white' 
+                        : 'bg-white border-2 border-gray-200 text-gray-700 hover:border-[#90C955]'
+                }`}
+            >
+                Buyers ({userCounts.buyer})
+            </button>
+            <button 
+                onClick={() => setFilter('admin')}
+                className={`px-6 py-3 rounded-xl font-semibold transition-all ${
+                    filter === 'admin' 
+                        ? 'bg-[#78C726] text-white' 
+                        : 'bg-white border-2 border-gray-200 text-gray-700 hover:border-[#90C955]'
+                }`}
+            >
+                Admins ({userCounts.admin})
+            </button>
+            <button 
+                onClick={fetchUsers}
+                className='ml-auto bg-gray-100 text-gray-700 rounded-xl px-6 py-3 flex items-center gap-2 hover:bg-gray-200 border-2 border-gray-200'
+            >
+                <i className='bi bi-arrow-clockwise'></i>
+                Refresh
+            </button>
+        </div>
+
+        {/* Users Count */}
+        <div className="mt-4">
+            <p className='text-sm text-gray-600'>
+                Showing <span className="font-semibold text-[#78C726]">{filteredUsers.length}</span> of <span className="font-semibold">{users.length}</span> users
+            </p>
+        </div>
+
+        {loading ? (
+            <div className="text-center py-12">
+                <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-[#78C726]"></div>
+                <p className='mt-4 text-gray-600'>Loading users...</p>
+            </div>
+        ) : (
+            <div className="bg-white rounded-2xl border-2 border-gray-200 mt-6 overflow-hidden">
+                <div className="overflow-x-auto">
+                    <table className='w-full'>
+                        <thead className='bg-[#E6F2D9]'>
+                            <tr>
+                                <th className='text-left p-4 font-semibold text-gray-800'>Name</th>
+                                <th className='text-left p-4 font-semibold text-gray-800'>Contact</th>
+                                <th className='text-left p-4 font-semibold text-gray-800'>Role</th>
+                                <th className='text-left p-4 font-semibold text-gray-800'>Address</th>
+                                <th className='text-center p-4 font-semibold text-gray-800'>Joined</th>
+                                <th className='text-center p-4 font-semibold text-gray-800'>Orders</th>
+                                <th className='text-center p-4 font-semibold text-gray-800'>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {filteredUsers.length === 0 ? (
+                                <tr>
+                                    <td colSpan={7} className='p-12 text-center'>
+                                        <i className='bi bi-people text-6xl text-gray-300'></i>
+                                        <p className="text-gray-500 text-lg mt-4">No users found</p>
+                                        <p className="text-gray-400">Try adjusting your filters</p>
+                                    </td>
+                                </tr>
+                            ) : (
+                                filteredUsers.map((user, index) => (
+                                    <tr key={user.id} className={`hover:bg-[#E6F2D9] transition-all ${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}`}>
+                                        <td className='p-4'>
+                                            <div className="flex items-center gap-3">
+                                                <div className='w-10 h-10 bg-[#E6F2D9] rounded-full flex items-center justify-center'>
+                                                    <i className='bi bi-person text-[#78C726]'></i>
+                                                </div>
+                                                <div>
+                                                    <div className='font-semibold text-gray-800'>{user.name || 'N/A'}</div>
+                                                    <div className='text-sm text-gray-500'>ID: {user.id}</div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td className='p-4'>
+                                            <div>
+                                                <div className='text-sm text-gray-800'>{user.email || 'N/A'}</div>
+                                                <div className='text-sm text-gray-500'>{user.phone || 'N/A'}</div>
+                                            </div>
+                                        </td>
+                                        <td className='p-4'>
+                                            <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                                                user.account_type?.toLowerCase() === 'admin' ? 'bg-amber-100 text-amber-700' : 
+                                                (user.account_type?.toLowerCase() === 'seller' || user.account_type?.toLowerCase() === 'farmer') ? 'bg-[#E6F2D9] text-[#78C726]' : 
+                                                (user.account_type?.toLowerCase() === 'buyer' || user.account_type?.toLowerCase() === 'user') ? 'bg-blue-100 text-blue-700' : 
+                                                'bg-gray-100 text-gray-700'
+                                            } uppercase`}>
+                                                {user.account_type ? (
+                                                    user.account_type.toLowerCase() === 'seller' ? 'FARMER' : 
+                                                    user.account_type.toLowerCase() === 'farmer' ? 'FARMER' :
+                                                    user.account_type.toLowerCase() === 'buyer' ? 'BUYER' : 
+                                                    user.account_type.toLowerCase() === 'user' ? 'BUYER' :
+                                                    user.account_type.toUpperCase()
+                                                ) : 'N/A'}
+                                            </span>
+                                        </td>
+                                        <td className='p-4 text-sm text-gray-700'>{user.address || 'N/A'}</td>
+                                        <td className='p-4 text-center text-sm text-gray-700'>
+                                            {user.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'N/A'}
+                                        </td>
+                                        <td className='p-4 text-center'>
+                                            <span className='bg-[#E6F2D9] text-[#78C726] px-3 py-1 rounded-full font-semibold'>
+                                                {user.ordersCount || 0}
+                                            </span>
+                                        </td>
+                                        <td className='p-4'>
+                                            <div className="flex gap-2 justify-center">
+                                                <button 
+                                                    onClick={() => handleViewClick(user)}
+                                                    className='bg-blue-100 text-blue-700 rounded-lg p-2 hover:bg-blue-200 transition-colors'
+                                                    title="View Details"
+                                                >
+                                                    <i className='bi bi-eye'></i>
+                                                </button>
+                                                <button 
+                                                    onClick={() => handleEditClick(user)}
+                                                    className='bg-[#E6F2D9] text-[#78C726] rounded-lg p-2 hover:bg-[#d4e8c1] transition-colors'
+                                                    title="Edit User"
+                                                >
+                                                    <i className='bi bi-pencil'></i>
+                                                </button>
+                                                <button 
+                                                    onClick={() => { setSelectedUser(user); setDeleteModal(true); }}
+                                                    className='bg-red-100 text-red-700 rounded-lg p-2 hover:bg-red-200 transition-colors'
+                                                    title="Delete User"
+                                                >
+                                                    <i className='bi bi-trash'></i>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))
+                            )}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        )}
 
         {/* View User Modal */}
         <div className={viewModal?'flex w-full h-screen justify-center overflow-hidden items-center fixed top-0 left-0 bg-black/50 bg-opacity-50 z-20':'hidden overflow-hidden'}>
