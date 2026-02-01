@@ -38,158 +38,227 @@ const FarmerSettings = () => {
   return (
     <FarmerDashboardLayout>
         <h1 className='text-2xl font-bold'>Settings</h1>
-        <p>Manage your account, system configurations, roles and general performance</p>
-        <div className="flex w-full flex-col gap-4 mt-4 bg-[#E6F2D9] p-6 rounded-2xl">
-            <div className="flex flex-col">
-                <span className='text-2xl font-bold'><i className='bi bi-person'></i> Account & Profile</span>
-                <p>Manage your personal information and preferences</p>
+        <p className='text-gray-600'>Manage your account and preferences</p>
+
+        {/* Account & Profile Section */}
+        <div className="bg-white rounded-2xl border-2 border-gray-200 mt-6 overflow-hidden">
+            <div className="p-4 bg-[#E6F2D9] border-b-2 border-gray-200">
+                <h2 className='text-xl font-bold text-gray-800 flex items-center gap-2'>
+                    <i className='bi bi-person'></i> 
+                    Account & Profile
+                </h2>
+                <p className='text-sm text-gray-600'>Manage your personal information and preferences</p>
             </div>
-            <div className="flex w-full mt-4 justify-items-start items-start">
-                <img src={Images.profileimg} className='w-[200px]' alt="profile image" />
-                <div className="flex flex-col w-full items-start ml-8">
-                    <h2 className='text-2xl'>{currentUser?.name || 'User'}</h2>
-                    <span className='bg-amber-300 rounded-4xl p-2 mt-4'>{currentUser?.account_type || 'User'}</span>
+            
+            <div className="p-6">
+                <div className="flex flex-col md:flex-row gap-6 items-start mb-6">
+                    <img src={Images.profileimg} className='w-32 h-32 rounded-full object-cover border-4 border-[#E6F2D9]' alt="profile image" />
+                    <div className="flex flex-col flex-1">
+                        <h2 className='text-2xl font-bold text-gray-800'>{currentUser?.name || 'User'}</h2>
+                        <span className='bg-amber-100 text-amber-700 px-3 py-1 rounded-full text-sm font-semibold mt-2 inline-block w-fit'>
+                            {currentUser?.account_type || 'User'}
+                        </span>
+                    </div>
                 </div>
-            </div>
-                <form onSubmit={handleSubmit} className="flex w-full flex-col">
-                    <div className="flex w-full justify-between mt-4">
-                        <div className='w-[48%]'>
-                            <label htmlFor="name">Full Name</label>
+
+                <form onSubmit={handleSubmit} className="space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label htmlFor="name" className='block text-sm font-semibold text-gray-700 mb-2'>Full Name</label>
                             <input 
                               type="text" 
                               name='name' 
                               value={formData.name}
                               onChange={handleChange}
-                              className='w-full p-2 border border-gray rounded' 
+                              className='w-full p-3 border-2 border-gray-200 rounded-xl focus:border-[#90C955] focus:outline-none' 
                             />
                         </div>
-                        <div className='w-[48%]'>
-                            <label htmlFor="email">Email</label>
+                        <div>
+                            <label htmlFor="email" className='block text-sm font-semibold text-gray-700 mb-2'>Email</label>
                             <input 
                               type="email" 
                               name='email' 
                               value={formData.email}
-                              className='w-full p-2 border border-gray rounded bg-gray-100' 
+                              className='w-full p-3 border-2 border-gray-200 rounded-xl bg-gray-50 cursor-not-allowed' 
                               disabled
                             />
                         </div>
                     </div>
-                    <div className="flex w-full justify-between mt-4">
-                        <div className='w-[48%]'>
-                            <label htmlFor="phone">Phone Number</label>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label htmlFor="phone" className='block text-sm font-semibold text-gray-700 mb-2'>Phone Number</label>
                             <input 
                               type="tel" 
                               name='phone' 
                               value={formData.phone}
                               onChange={handleChange}
-                              className='w-full p-2 border border-gray rounded' 
+                              className='w-full p-3 border-2 border-gray-200 rounded-xl focus:border-[#90C955] focus:outline-none' 
                             />
                         </div>
-                        <div className='w-[48%]'>
-                            <label htmlFor="role">Role</label>
+                        <div>
+                            <label htmlFor="role" className='block text-sm font-semibold text-gray-700 mb-2'>Role</label>
                             <input 
                               type="text" 
                               name='role' 
                               value={currentUser?.account_type || ''}
-                              className='w-full p-2 border border-gray rounded bg-gray-100' 
+                              className='w-full p-3 border-2 border-gray-200 rounded-xl bg-gray-50 cursor-not-allowed' 
                               disabled
                             />
                         </div>
                     </div>
-                    <div className="flex w-full justify-between mt-4">
-                        <div className='w-[48%]'>
-                            <label htmlFor="language">Language</label>
-                            <input type="text" name='language' defaultValue="English" className='w-full p-2 border border-gray rounded' />
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label htmlFor="language" className='block text-sm font-semibold text-gray-700 mb-2'>Language</label>
+                            <input type="text" name='language' defaultValue="English" className='w-full p-3 border-2 border-gray-200 rounded-xl focus:border-[#90C955] focus:outline-none' />
                         </div>
-                        <div className='w-[48%]'>
-                            <label htmlFor="timezone">Time Zone</label>
-                            <input type="text" name='timezone' defaultValue="UTC" className='w-full p-2 border border-gray rounded' />
+                        <div>
+                            <label htmlFor="timezone" className='block text-sm font-semibold text-gray-700 mb-2'>Time Zone</label>
+                            <input type="text" name='timezone' defaultValue="UTC" className='w-full p-3 border-2 border-gray-200 rounded-xl focus:border-[#90C955] focus:outline-none' />
                         </div>
                     </div>
-                    <div className="flex w-full justify-between mt-8">
-                        <span className='border p-4 rounded border-green text-green-500 cursor-pointer'> Change Password</span>
-                        <button type="submit" className='cursor-pointer p-4 rounded bg-green-500 text-white'>Update Profile</button>
+
+                    <div className="flex flex-col md:flex-row gap-4 justify-end pt-4">
+                        <button type="button" className='border-2 border-[#78C726] text-[#78C726] px-6 py-3 rounded-xl hover:bg-[#E6F2D9] transition-all font-semibold'>
+                            <i className='bi bi-key mr-2'></i>
+                            Change Password
+                        </button>
+                        <button type="submit" className='bg-[#78C726] text-white px-6 py-3 rounded-xl hover:bg-[#6ab31f] transition-all font-semibold'>
+                            <i className='bi bi-check-circle mr-2'></i>
+                            Update Profile
+                        </button>
                     </div>
-                    
                 </form>
+            </div>
         </div>
 
-        <div className="flex w-full flex-col gap-4 mt-4 bg-[#E6F2D9] p-6  rounded-2xl">
-            <h1 className='font-bold mt-4'><i className='bi bi-gear'></i> System Settings</h1>
-            <p>Configure system-wide preferences and behaviors</p>
-            <div className="flex w-full flex-col p-4 border border-gray rounded ">
-                <div>
-                    <h3 className='font-bold'> <i className='bi bi-check border rounded'></i> Require Admin Approval Before Products Go Live</h3>
-                    <p className='text-[12px]'>New products must be reviewed and approved by an admin before appearing on the marketplace</p>
+        {/* Notification Preferences */}
+        <div className="bg-white rounded-2xl border-2 border-gray-200 mt-6 overflow-hidden">
+            <div className="p-4 bg-[#E6F2D9] border-b-2 border-gray-200">
+                <h2 className='text-xl font-bold text-gray-800 flex items-center gap-2'>
+                    <i className='bi bi-bell'></i> 
+                    Notification Preferences
+                </h2>
+                <p className='text-sm text-gray-600'>Choose which events trigger notifications</p>
+            </div>
+            
+            <div className="p-6 space-y-4">
+                <div className="flex items-center justify-between p-4 bg-[#E6F2D9] rounded-xl hover:bg-[#d4e8c1] transition-all">
+                    <div className='flex items-center gap-3'>
+                        <div className='w-10 h-10 bg-[#78C726] rounded-lg flex items-center justify-center'>
+                            <i className='bi bi-box text-white'></i>
+                        </div>
+                        <div>
+                            <h3 className='font-bold text-gray-800'>New Product Submitted</h3>
+                            <p className='text-xs text-gray-600'>Get notified when farmers submit new products</p>
+                        </div>
+                    </div>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" className="sr-only peer" defaultChecked />
+                        <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#78C726]"></div>
+                    </label>
                 </div>
 
-            </div>
-            <h3 className='font-bold mt-4'> <i className='bi bi-bell'></i>  Notification Preferences</h3>
-            <p>Choose which events trigger notifications</p>
-            <div className="flex w-full flex-col p-4 border border-gray rounded ">
-                <div>
-                    <h3 className='font-bold'> <i className='bi bi-check border rounded'></i> New Product Submitted</h3>
-                    <p className='text-[12px]'>Get notified when farmers submit new products</p>
+                <div className="flex items-center justify-between p-4 bg-[#E6F2D9] rounded-xl hover:bg-[#d4e8c1] transition-all">
+                    <div className='flex items-center gap-3'>
+                        <div className='w-10 h-10 bg-[#78C726] rounded-lg flex items-center justify-center'>
+                            <i className='bi bi-basket text-white'></i>
+                        </div>
+                        <div>
+                            <h3 className='font-bold text-gray-800'>New Order Received</h3>
+                            <p className='text-xs text-gray-600'>Get notified when buyers place new orders</p>
+                        </div>
+                    </div>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" className="sr-only peer" defaultChecked />
+                        <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#78C726]"></div>
+                    </label>
                 </div>
 
-            </div>
-            <div className="flex w-full flex-col p-4 border border-gray rounded ">
-                <div>
-                    <h3 className='font-bold'> <i className='bi bi-check border rounded'></i> New Order Received</h3>
-                    <p className='text-[12px]'>Get notified when buyers place new orders</p>
+                <div className="flex items-center justify-between p-4 bg-[#E6F2D9] rounded-xl hover:bg-[#d4e8c1] transition-all">
+                    <div className='flex items-center gap-3'>
+                        <div className='w-10 h-10 bg-red-500 rounded-lg flex items-center justify-center'>
+                            <i className='bi bi-x-circle text-white'></i>
+                        </div>
+                        <div>
+                            <h3 className='font-bold text-gray-800'>Order Cancelled</h3>
+                            <p className='text-xs text-gray-600'>Get notified when orders are cancelled</p>
+                        </div>
+                    </div>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" className="sr-only peer" defaultChecked />
+                        <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#78C726]"></div>
+                    </label>
                 </div>
 
-            </div>
-            <div className="flex w-full flex-col p-4 border border-gray rounded ">
-                <div>
-                    <h3 className='font-bold'> <i className='bi bi-check border rounded'></i> Order Cancelled</h3>
-                    <p className='text-[12px]'>Get notified when orders are cancelled</p>
+                <div className="flex items-center justify-between p-4 bg-[#E6F2D9] rounded-xl hover:bg-[#d4e8c1] transition-all">
+                    <div className='flex items-center gap-3'>
+                        <div className='w-10 h-10 bg-blue-500 rounded-lg flex items-center justify-center'>
+                            <i className='bi bi-chat-dots text-white'></i>
+                        </div>
+                        <div>
+                            <h3 className='font-bold text-gray-800'>Support Message Received</h3>
+                            <p className='text-xs text-gray-600'>Get notified when users send support messages</p>
+                        </div>
+                    </div>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" className="sr-only peer" defaultChecked />
+                        <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#78C726]"></div>
+                    </label>
                 </div>
-
             </div>
-            <div className="flex w-full flex-col p-4 border border-gray rounded ">
-                <div>
-                    <h3 className='font-bold'> <i className='bi bi-check border rounded'></i> Support Message Received</h3>
-                    <p className='text-[12px]'>Get notified when users send support messages</p>
-                </div>
+        </div>
 
+        {/* Order Management Settings */}
+        <div className="bg-white rounded-2xl border-2 border-gray-200 mt-6 overflow-hidden">
+            <div className="p-4 bg-[#E6F2D9] border-b-2 border-gray-200">
+                <h2 className='text-xl font-bold text-gray-800 flex items-center gap-2'>
+                    <i className='bi bi-box'></i> 
+                    Order Management Settings
+                </h2>
+                <p className='text-sm text-gray-600'>Configure order processing preferences</p>
             </div>
-            <h1 className='font-bold mt-4'><i className='bi bi-box'></i> Order Management Settings</h1>
-            <p>Configure system-wide preferences and behaviors</p>
-            <div className="flex w-full flex-col p-4 border border-gray rounded ">
-                <div>
-                    <h3 className='font-bold'> <i className='bi bi-check border rounded'></i> Default Status Flow</h3>
-                    <div className="flex mt-4 items-center">
-                        <span className="p-2 bg-[#FF9A00] m-1 rounded-2xl text-white">Pending</span>
-                        <i className='bi bi-arrow-right'></i>
-                        <span className="p-2 bg-[#FFE100] m-1 rounded-2xl text-white">Processing</span>
-                        <i className='bi bi-arrow-right'></i>
-                        <span className="p-2 bg-[#90C955] m-1 rounded-2xl text-white">Completed</span>
+            
+            <div className="p-6 space-y-4">
+                <div className="p-4 bg-[#E6F2D9] rounded-xl">
+                    <h3 className='font-bold text-gray-800 mb-3'>
+                        <i className='bi bi-arrow-repeat mr-2'></i>
+                        Default Status Flow
+                    </h3>
+                    <div className="flex flex-wrap items-center gap-2">
+                        <span className="px-4 py-2 bg-amber-500 rounded-full text-white font-semibold">Pending</span>
+                        <i className='bi bi-arrow-right text-gray-400'></i>
+                        <span className="px-4 py-2 bg-blue-500 rounded-full text-white font-semibold">Accepted</span>
+                        <i className='bi bi-arrow-right text-gray-400'></i>
+                        <span className="px-4 py-2 bg-[#78C726] rounded-full text-white font-semibold">Delivered</span>
                     </div>
                 </div>
-            </div>
-             <div className="flex w-full flex-col p-4 border border-gray rounded ">  
-                <div>
-                    <h3 className='font-bold'> <i className='bi bi-check border rounded'></i> Auto-Notify Farmer & Buyer</h3>
-                    <p className='text-[12px]'>Automatically send notifications when order status changes</p>
-                </div>
-            </div>
-            <div className="flex w-full justify-end">
-                <button className='cursor-pointer p-4 rounded bg-green-500 text-white float-right'>Update Profile</button>
 
-            </div>
-            </div>
-            <div className="flex w-full flex-col gap-4 mt-4 bg-[#E6F2D9] p-6  rounded-2xl">
-                <h1 className='font-bold mt-4'><i className='bi bi-shield'></i> Access Control</h1>
-                <p>Manage user roles, permissions, and access levels</p>
-                <h1 className='font-bold mt-4'><i className='bi bi-person'></i> Manage Roles</h1>
-                <div className="flex w-full flex-col p-4 border border-gray rounded ">  
-                    <div>
-                        <h3 className='font-bold'> <i className='bi bi-check border rounded'></i> Admin</h3>
-                        <p className='text-[12px]'>Full system access and control</p>
+                <div className="flex items-center justify-between p-4 bg-[#E6F2D9] rounded-xl">
+                    <div className='flex items-center gap-3'>
+                        <div className='w-10 h-10 bg-[#78C726] rounded-lg flex items-center justify-center'>
+                            <i className='bi bi-bell text-white'></i>
+                        </div>
+                        <div>
+                            <h3 className='font-bold text-gray-800'>Auto-Notify Farmer & Buyer</h3>
+                            <p className='text-xs text-gray-600'>Automatically send notifications when order status changes</p>
+                        </div>
                     </div>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" className="sr-only peer" defaultChecked />
+                        <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#78C726]"></div>
+                    </label>
+                </div>
+
+                <div className="flex justify-end pt-4">
+                    <button className='bg-[#78C726] text-white px-6 py-3 rounded-xl hover:bg-[#6ab31f] transition-all font-semibold'>
+                        <i className='bi bi-check-circle mr-2'></i>
+                        Save Settings
+                    </button>
                 </div>
             </div>
+        </div>
         
     </FarmerDashboardLayout>
   )

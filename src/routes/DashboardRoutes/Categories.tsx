@@ -109,128 +109,142 @@ const Categories = () => {
     const filteredCategories = searchTerm 
         ? categories.filter(cat => cat.name?.toLowerCase().includes(searchTerm.toLowerCase()))
         : categories;
-  return (
-    <DashboardLayout>
-      <h1 className='text-2xl font-bold'>All Categories</h1>
-        <p>Add and manage all categories</p>
-        <div className="flex full">
-            <div className="flex">
-                <input 
-                    type="text" 
-                    placeholder='Search categories...' 
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className='border border-gray-300 rounded p-2 m-2 w-64'
-                />
-                <button onClick={handleSearch} className='bg-[#90C955] text-white rounded p-2 m-2'><i className='bi bi-search m-2'></i>Search</button>
-            </div>
-            <div className="flex ml-auto">
-                <button onClick={() => { resetForm(); setShowAddModal(true); }} className='bg-[#78C726] text-white rounded p-2 m-2'><i className='bi bi-plus-circle m-1'></i>Add New Category</button>
-            </div>
-        </div>
-
-        {loading ? (
-            <div className="text-center py-12">
-                <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-[#78C726]"></div>
-                <p className='mt-4 text-gray-600'>Loading categories...</p>
-            </div>
-        ) : (
-        <div className="flex w-full flex-wrap mt-2 gap-4 p-6 ">
-          {filteredCategories.length === 0 ? (
-            <div className="w-full text-center py-12 text-gray-500">
-                No categories found. Add your first category to get started!
-            </div>
-          ) : (
-            filteredCategories.map(category => (
-              <div key={category.id} className="flex flex-col w-[250px] p-4 bg-white rounded-lg shadow-lg">
-                <i className='bi bi-folder2-open text-2xl mb-4 text-[#78C726]'></i>
-                <h3 className='text-[1rem] mb-2 font-bold'>{category.name}</h3>
-                <p className='text-justify line-clamp-4'>{category.description || 'No description available'}</p>
-                <div className='border border-gray-300 p-2 flex justify-end w-full rounded-lg mt-4'>
-                    <button onClick={() => handleEditClick(category)} className='bg-[#78C726] text-white rounded p-2 m-2'><i className='bi bi-pencil m-2'></i></button>
-                    <button onClick={() => { setSelectedCategory(category); setDeleteModal(true); }} className='bg-[#DF6B57] text-white rounded p-2 m-2'><i className='bi bi-trash m-2'></i></button>
+    return (
+        <DashboardLayout>
+            <div className="flex justify-between items-center mb-6">
+                <div>
+                    <h1 className='font-bold text-2xl'>Category Management</h1>
+                    <p className='text-gray-600'>Review and manage all categories</p>
                 </div>
-              </div>
-            ))
-          )}
-        </div>
-        )}
-
-        {/* add Category modal window */}
-        <div className={showAddModal?'flex w-full h-screen justify-center overflow-y-scroll items-center fixed top-0 left-0 bg-black/50 bg-opacity-50 z-20':'hidden overflow-hidden'}>
-            <button 
-            onClick={() => { setShowAddModal(false); resetForm(); }}
-            className='p-2 border border-[white] bg-white cursor-pointer rounded absolute top-4 right-4'><i className='bi bi-x font-bold text-2xl text-black'></i></button>
-            <div className="flex w-[60%] h-auto border border-gray-300 rounded mt-6 p-4 m-2 flex-col justify-center bg-white">
-                <h1 className='text-2xl font-bold'>Add New Category</h1>
-                <form onSubmit={handleAddCategory} className="flex flex-col w-fill p-4 mt-12">
-                        <label htmlFor="name">Category Name</label>
-                        <input 
-                            type="text" 
-                            name="name" 
-                            value={formData.name}
-                            onChange={handleInputChange}
-                            placeholder='category name' 
-                            className='w-full p-2 border border-gray rounded'
-                            required
-                        />
-                        <label htmlFor="description">Description</label>
-                        <textarea 
-                            name="description" 
-                            value={formData.description}
-                            onChange={handleInputChange}
-                            className='w-full h-[100px] p-2 border border-gray rounded'
-                        ></textarea>
-                            
-                        <button type="submit" className='bg-[#78C726] text-white rounded p-2 mt-4 float-end'>Create Category</button>
-                </form>
+                <button onClick={() => { resetForm(); setShowAddModal(true); }} className='bg-[#78C726] text-white rounded-lg px-4 py-2 flex items-center gap-2'>
+                    <i className='bi bi-plus-circle'></i>
+                    Add New Category
+                </button>
             </div>
-        </div>
-        {/* edit Category modal window */}
-        <div className={showEditModal?'flex w-full h-screen justify-center overflow-y-scroll items-center fixed top-0 left-0 bg-black/50 bg-opacity-50 z-20':'hidden overflow-hidden'}>
-            <button 
-            onClick={() => { setShowEditModal(false); resetForm(); }}
-            className='p-2 border border-[white] bg-white cursor-pointer rounded absolute top-4 right-4'><i className='bi bi-x font-bold text-2xl text-black'></i></button>
-            <div className="flex w-[60%] h-auto border border-gray-300 rounded mt-6 p-4 m-2 flex-col justify-center bg-white">
-                <h1 className='text-2xl font-bold'>Edit Category</h1>
-                <form onSubmit={handleUpdateCategory} className="flex flex-col w-fill p-4 mt-12">
-                        <label htmlFor="name">Category Name</label>
-                        <input 
-                            type="text" 
-                            name="name" 
-                            value={formData.name}
-                            onChange={handleInputChange}
-                            placeholder='category name' 
-                            className='w-full p-2 border border-gray rounded'
-                            required
-                        />
-                        <label htmlFor="description">Description</label>
-                        <textarea 
-                            name="description" 
-                            value={formData.description}
-                            onChange={handleInputChange}
-                            className='w-full h-[100px] p-2 border border-gray rounded'
-                        ></textarea>
-                            
-                        <button type="submit" className='bg-[#78C726] text-white rounded p-2 mt-4 float-end'>Save Changes</button>
-                </form>
-            </div>
-        </div>
 
-        {/* Delete modal window */}
-        <div className={deleteModal?'flex w-full h-screen justify-center overflow-hidden items-center fixed top-0 left-0 bg-black/50 bg-opacity-50 z-20':'hidden overflow-hidden'}>
-            <div className="flex w-[40%] z-50 h-auto border border-gray-300 rounded p-4 m-2 flex-col justify-center bg-white">
-                <h1 className='text-2xl font-bold'>Delete Category?</h1>
-                <p>This will permanently delete "{selectedCategory?.name || 'this category'}". This action cannot be undone.</p>
-                <div className="flex">
-                    <button onClick={() => { setDeleteModal(false); setSelectedCategory(null); }} className='bg-none border border-[#78C726] text-[#78C726] rounded p-2 m-2'>No</button>
-                    <button onClick={handleDelete} className='bg-[#DF6B57] text-white rounded p-2 m-2'>Yes</button>
+            <div className="flex gap-4 mb-6">
+                <input type="text" placeholder='Search categories...' value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className='flex-1 border border-gray-300 rounded-lg p-3'/>
+                <button onClick={handleSearch} className='bg-[#90C955] text-white rounded-lg px-6 py-3'>
+                    <i className='bi bi-search mr-2'></i>Search
+                </button>
+            </div>
+
+            {loading ? (
+                <div className="flex justify-center items-center py-12">
+                    <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-[#78C726]"></div>
+                    <p className='ml-4'>Loading categories...</p>
                 </div>
-            </div>
-        </div>
-        
-    </DashboardLayout>
-  )
+            ) : filteredCategories.length === 0 ? (
+                <div className="text-center py-12">
+                    <i className='bi bi-folder2-open text-6xl text-gray-300'></i>
+                    <p className="text-gray-500 text-lg mt-4">No categories found</p>
+                    <p className="text-gray-400">Click "Add New Category" to create one</p>
+                </div>
+            ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {filteredCategories.map(category => (
+                        <div key={category.id} className="bg-white border-2 border-gray-200 rounded-2xl p-6 hover:border-[#90C955] transition-all hover:shadow-lg">
+                            <div className="flex justify-between items-start mb-4">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-12 h-12 bg-[#E6F2D9] rounded-full flex items-center justify-center">
+                                        <i className='bi bi-folder2-open text-2xl text-[#78C726]'></i>
+                                    </div>
+                                    <div>
+                                        <h3 className='font-bold text-lg text-gray-800'>{category.name}</h3>
+                                        <p className='text-sm text-gray-500'>Category ID: #{category.id}</p>
+                                    </div>
+                                </div>
+                                <span className='bg-green-100 text-green-600 text-xs px-3 py-1 rounded-full font-semibold'>
+                                    Active
+                                </span>
+                            </div>
+                            <div className="space-y-3 mb-4">
+                                <div className="flex items-start gap-2">
+                                    <i className='bi bi-info-circle-fill text-[#78C726] mt-1'></i>
+                                    <div>
+                                        <p className='text-xs text-gray-500'>Description</p>
+                                        <p className='text-sm text-gray-700'>{category.description || 'No description available'}</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div className='flex gap-2 pt-4 border-t border-gray-200'>
+                                <button 
+                                    onClick={() => handleEditClick(category)} 
+                                    className='flex-1 bg-[#78C726] text-white rounded-lg py-2 hover:bg-[#6ab31f] transition-colors flex items-center justify-center gap-2'
+                                >
+                                    <i className='bi bi-pencil'></i>
+                                    Edit
+                                </button>
+                                <button 
+                                    onClick={() => { setSelectedCategory(category); setDeleteModal(true); }} 
+                                    className='flex-1 bg-[#DF6B57] text-white rounded-lg py-2 hover:bg-[#c95d4a] transition-colors flex items-center justify-center gap-2'
+                                >
+                                    <i className='bi bi-trash'></i>
+                                    Delete
+                                </button>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            )}
+
+            {/* Add Modal */}
+            {showAddModal && (
+                <div className="fixed inset-0 flex items-center justify-center bg-transparent bg-opacity-40 z-50" style={{backdropFilter: 'blur(2px)'}}>
+                    <div className="bg-white p-6 rounded shadow-lg w-[400px]">
+                        <h2 className='text-xl font-bold mb-4'>Add Category</h2>
+                        <form onSubmit={handleAddCategory}>
+                            <label className='block mb-2'>Name
+                                <input type="text" name="name" value={formData.name} onChange={handleInputChange} className='w-full p-2 border rounded mb-2' required />
+                            </label>
+                            <label className='block mb-2'>Description
+                                <textarea name="description" value={formData.description} onChange={handleInputChange} className='w-full p-2 border rounded mb-2' />
+                            </label>
+                            <div className='flex justify-end gap-2 mt-4'>
+                                <button className='bg-gray-300 text-black rounded p-2' onClick={()=>setShowAddModal(false)} type="button">Cancel</button>
+                                <button className='bg-[#78C726] text-white rounded p-2' type="submit">Add Category</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+
+            {/* Edit Modal */}
+            {showEditModal && (
+                <div className="fixed inset-0 flex items-center justify-center bg-transparent bg-opacity-40 z-50" style={{backdropFilter: 'blur(2px)'}}>
+                    <div className="bg-white p-6 rounded shadow-lg w-[400px]">
+                        <h2 className='text-xl font-bold mb-4'>Edit Category</h2>
+                        <form onSubmit={handleUpdateCategory}>
+                            <label className='block mb-2'>Name
+                                <input type="text" name="name" value={formData.name} onChange={handleInputChange} className='w-full p-2 border rounded mb-2' required />
+                            </label>
+                            <label className='block mb-2'>Description
+                                <textarea name="description" value={formData.description} onChange={handleInputChange} className='w-full p-2 border rounded mb-2' />
+                            </label>
+                            <div className='flex justify-end gap-2 mt-4'>
+                                <button className='bg-gray-300 text-black rounded p-2' onClick={()=>setShowEditModal(false)} type="button">Cancel</button>
+                                <button className='bg-[#78C726] text-white rounded p-2' type="submit">Save</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+
+            {/* Delete Modal */}
+            {deleteModal && (
+                <div className="fixed inset-0 flex items-center justify-center bg-transparent bg-opacity-40 z-50" style={{backdropFilter: 'blur(2px)'}}>
+                    <div className="bg-white p-6 rounded shadow-lg w-[400px]">
+                        <h2 className='text-xl font-bold mb-4'>Delete Category?</h2>
+                        <p>This will permanently delete "{selectedCategory?.name || 'this category'}". This action cannot be undone.</p>
+                        <div className="flex justify-end gap-2 mt-4">
+                            <button className='bg-gray-300 text-black rounded p-2' onClick={() => { setDeleteModal(false); setSelectedCategory(null); }}>Cancel</button>
+                            <button className='bg-[#DF6B57] text-white rounded p-2' onClick={handleDelete}>Delete</button>
+                        </div>
+                    </div>
+                </div>
+            )}
+        </DashboardLayout>
+    );
 }
 
-export default Categories
+export default Categories;

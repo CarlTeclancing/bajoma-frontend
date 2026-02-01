@@ -36,15 +36,19 @@ export interface Farm {
     id: number;
     name: string;
     location: string;
-    size: number | string; // backend may return string from inputs; normalize on save if needed
+    length: number | string;
+    width: number | string;
+    details?: string;
     user?: FarmOwner | null;
-    description?: string;
     createdAt?: string;
+    status?: string;
 }
 
 export interface FarmCreateInput {
     name: string;
     location: string;
-    size: number | string;
+    length: number | string;
+    width: number | string;
+    details?: string;
 }
 

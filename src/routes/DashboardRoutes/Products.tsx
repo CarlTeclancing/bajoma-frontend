@@ -147,112 +147,203 @@ const Products = () => {
         }
     };
 
+    // Calculate product stats
+    const activeProducts = products.filter(p => p.status === 'ACTIF').length;
+    const inactiveProducts = products.filter(p => p.status !== 'ACTIF').length;
+    const totalValue = products.reduce((sum, p) => sum + (parseFloat(p.price) * parseInt(p.quantity || 0)), 0);
+    const lowStockProducts = products.filter(p => parseInt(p.quantity) < 10).length;
+
   return (
     <DashboardLayout>
-        <h1 className='font-bold text-2xl'>Product Managment</h1>
-        <p>Review and manage all farmer products</p>
-        <div className="flex full">
-            <div className="flex">
-                <input 
-                    type="text" 
-                    placeholder='Search products...' 
-                    className='border border-gray-300 rounded p-2 m-2 w-64'
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                />
-                <button 
-                    onClick={handleSearch}
-                    className='bg-[#90C955] text-white rounded p-2 m-2'>
-                    <i className='bi bi-search m-2'></i>Search
-                </button>
-            </div>
-            <div className="flex ml-auto">
-                <button onClick={()=> { resetForm(); setShowAddModal(true); }} className='bg-[#78C726] text-white rounded p-2 m-2'><i className='bi bi-plus-circle m-1'></i>Add New Product</button>
-            </div>
-        </div>
-        <div className="flex justify-end mt-12 w-full">
-            
-            <button className='border border-[#90C955] text-[#90C955] rounded p-2 m-2'> <i className='bi bi-filter'></i> Filter</button>
+        <h1 className='text-2xl font-bold'>Product Management</h1>
+        <p className='text-gray-600'>Review and manage all farmer products</p>
 
+        {/* Stats Cards */}
+        <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mt-6'>
+            <div className="bg-white rounded-2xl p-6 border-2 border-gray-200 hover:border-[#90C955] transition-all">
+                <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 bg-[#E6F2D9] rounded-lg flex items-center justify-center">
+                        <i className='bi bi-box-seam text-2xl text-[#78C726]'></i>
+                    </div>
+                    <div>
+                        <p className='text-sm text-gray-600'>Total Products</p>
+                        <h2 className='text-2xl font-bold text-gray-800'>{products.length}</h2>
+                    </div>
+                </div>
+            </div>
+
+            <div className="bg-white rounded-2xl p-6 border-2 border-gray-200 hover:border-[#90C955] transition-all">
+                <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+                        <i className='bi bi-check-circle text-2xl text-green-600'></i>
+                    </div>
+                    <div>
+                        <p className='text-sm text-gray-600'>Active Products</p>
+                        <h2 className='text-2xl font-bold text-gray-800'>{activeProducts}</h2>
+                    </div>
+                </div>
+            </div>
+
+            <div className="bg-white rounded-2xl p-6 border-2 border-gray-200 hover:border-amber-400 transition-all">
+                <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 bg-amber-100 rounded-lg flex items-center justify-center">
+                        <i className='bi bi-exclamation-triangle text-2xl text-amber-600'></i>
+                    </div>
+                    <div>
+                        <p className='text-sm text-gray-600'>Low Stock</p>
+                        <h2 className='text-2xl font-bold text-gray-800'>{lowStockProducts}</h2>
+                    </div>
+                </div>
+            </div>
+
+            <div className="bg-white rounded-2xl p-6 border-2 border-gray-200 hover:border-[#90C955] transition-all">
+                <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 bg-[#E6F2D9] rounded-lg flex items-center justify-center">
+                        <i className='bi bi-cash-stack text-2xl text-[#78C726]'></i>
+                    </div>
+                    <div>
+                        <p className='text-sm text-gray-600'>Inventory Value</p>
+                        <h2 className='text-2xl font-bold text-[#78C726]'>${totalValue.toFixed(2)}</h2>
+                    </div>
+                </div>
+            </div>
         </div>
+
+        {/* Actions and Search */}
+        <div className="flex flex-col md:flex-row gap-4 mt-6">
+            <input
+                type="text"
+                placeholder='Search products by name or description...'
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className='flex-1 border-2 border-gray-200 rounded-xl p-3 focus:border-[#90C955] focus:outline-none'
+            />
+            <button
+                onClick={fetchProducts}
+                className='bg-gray-100 text-gray-700 rounded-xl px-6 py-3 flex items-center gap-2 hover:bg-gray-200 border-2 border-gray-200'
+            >
+                <i className='bi bi-arrow-clockwise'></i>
+                Refresh
+            </button>
+            <button
+                onClick={() => { resetForm(); setShowAddModal(true); }}
+                className='bg-[#78C726] text-white rounded-xl px-6 py-3 flex items-center gap-2 hover:bg-[#6ab31f]'
+            >
+                <i className='bi bi-plus-circle'></i>
+                Add Product
+            </button>
+        </div>
+
+        {/* Products Count */}
+        <div className="mt-4">
+            <p className='text-sm text-gray-600'>
+                Showing <span className="font-semibold text-[#78C726]">{products.length}</span> products
+            </p>
+        </div>
+
         {loading ? (
             <div className="text-center py-12">
                 <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-[#78C726]"></div>
                 <p className='mt-4 text-gray-600'>Loading products...</p>
             </div>
         ) : (
-            <table className='w-full border-collapse border border-gray-300 mt-4 w-full'>
-                <thead>
-                    <tr>
-                        <th className='border border-gray-300 p-2'>Product</th>
-                        <th className='border border-gray-300 p-2'>Category</th>
-                        <th className='border border-gray-300 p-2'>Price</th>
-                        <th className='border border-gray-300 p-2'>Location</th>
-                        <th className='border border-gray-300 p-2'>Status</th>
-                        <th className='border border-gray-300 p-2'>Date</th>
-                        <th className='border border-gray-300 p-2'>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {products.length === 0 ? (
-                        <tr>
-                            <td colSpan={7} className='border border-gray-300 p-8 text-center text-gray-500'>
-                                No products found. Add your first product to get started!
-                            </td>
-                        </tr>
-                    ) : (
-                        products.map(product => (
-                            <tr key={product.id}>
-                                <td className='border border-gray-300 p-2'>
-                                    <div className="flex items-center gap-2">
-                                        {product.image ? (
-                                            <img src={product.image} alt={product.name} className='w-12 h-12 object-cover rounded' />
-                                        ) : (
-                                            <div className='w-12 h-12 bg-gray-200 rounded flex items-center justify-center'>
-                                                <i className='bi bi-image text-gray-400'></i>
-                                            </div>
-                                        )}
-                                        <span className='font-semibold'>{product.name}</span>
-                                    </div>
-                                </td>
-                                <td className='border border-gray-300 p-2'>{product.category?.name || 'N/A'}</td>
-                                <td className='border border-gray-300 p-2'>${product.price || '0.00'}</td>
-                                <td className='border border-gray-300 p-2'>{product.location || 'N/A'}</td>
-                                <td className='border border-gray-300 p-2'>
-                                    <span className={`px-2 py-1 rounded text-sm ${
-                                        product.status === 'ACTIF' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
-                                    }`}>
-                                        {product.status || 'N/A'}
-                                    </span>
-                                </td>
-                                <td className='border border-gray-300 p-2'>
-                                    {product.createdAt ? new Date(product.createdAt).toLocaleDateString() : 'N/A'}
-                                </td>
-                                <td className='border border-gray-300 p-2 flex justify-end'>
-                                    <button 
-                                        onClick={() => { setSelectedProduct(product); setShowViewModal(true); }} 
-                                        className='bg-[#78C726] text-white rounded p-2 m-2 flex'
-                                    >
-                                        <i className='bi bi-eye m-2'></i>
-                                    </button>
-                                    <button 
-                                        onClick={() => handleEditClick(product)} 
-                                        className='bg-[#78C726] text-white rounded p-2 m-2'
-                                    >
-                                        <i className='bi bi-pencil m-2'></i>
-                                    </button>
-                                    <button 
-                                        onClick={() => { setSelectedProduct(product); setDeleteModal(true); }} 
-                                        className='bg-[#DF6B57] text-white rounded p-2 m-2'
-                                    >
-                                        <i className='bi bi-trash m-2'></i>
-                                    </button>
-                                </td>
+            <div className="bg-white rounded-2xl border-2 border-gray-200 mt-6 overflow-hidden">
+                <div className="overflow-x-auto">
+                    <table className='w-full'>
+                        <thead className='bg-[#E6F2D9]'>
+                            <tr>
+                                <th className='text-left p-4 font-semibold text-gray-800'>Product</th>
+                                <th className='text-left p-4 font-semibold text-gray-800'>Category</th>
+                                <th className='text-left p-4 font-semibold text-gray-800'>Price</th>
+                                <th className='text-center p-4 font-semibold text-gray-800'>Quantity</th>
+                                <th className='text-left p-4 font-semibold text-gray-800'>Location</th>
+                                <th className='text-center p-4 font-semibold text-gray-800'>Status</th>
+                                <th className='text-center p-4 font-semibold text-gray-800'>Date</th>
+                                <th className='text-center p-4 font-semibold text-gray-800'>Actions</th>
                             </tr>
-                        ))
-                    )}
-                </tbody>
-            </table>
+                        </thead>
+                        <tbody>
+                            {products.length === 0 ? (
+                                <tr>
+                                    <td colSpan={8} className='p-12 text-center'>
+                                        <i className='bi bi-box-seam text-6xl text-gray-300'></i>
+                                        <p className="text-gray-500 text-lg mt-4">No products found</p>
+                                        <p className="text-gray-400">Add your first product to get started!</p>
+                                    </td>
+                                </tr>
+                            ) : (
+                                products.map((product, index) => (
+                                    <tr key={product.id} className={`hover:bg-[#E6F2D9] transition-all ${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}`}>
+                                        <td className='p-4'>
+                                            <div className="flex items-center gap-3">
+                                                {product.image ? (
+                                                    <img src={product.image} alt={product.name} className='w-12 h-12 object-cover rounded-lg' />
+                                                ) : (
+                                                    <div className='w-12 h-12 bg-gray-200 rounded-lg flex items-center justify-center'>
+                                                        <i className='bi bi-image text-gray-400'></i>
+                                                    </div>
+                                                )}
+                                                <div>
+                                                    <div className='font-semibold text-gray-800'>{product.name}</div>
+                                                    <div className='text-sm text-gray-500'>ID: {product.id}</div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td className='p-4 text-gray-700'>{product.category?.name || 'N/A'}</td>
+                                        <td className='p-4 font-semibold text-gray-800'>${product.price || '0.00'}</td>
+                                        <td className='p-4 text-center'>
+                                            <span className={`px-3 py-1 rounded-full font-semibold ${
+                                                product.quantity === 0 || !product.quantity ? 'bg-red-100 text-red-700' :
+                                                product.quantity < 5 ? 'bg-red-100 text-red-700' :
+                                                product.quantity < 10 ? 'bg-amber-100 text-amber-700' :
+                                                'bg-green-100 text-green-700'
+                                            }`}>
+                                                {product.quantity || 0}
+                                            </span>
+                                        </td>
+                                        <td className='p-4 text-gray-700'>{product.location || 'N/A'}</td>
+                                        <td className='p-4 text-center'>
+                                            <span className={`px-3 py-1 rounded-full font-semibold ${
+                                                product.status === 'ACTIF' ? 'bg-green-100 text-green-700' : 'bg-gray-200 text-gray-600'
+                                            }`}>
+                                                {product.status || 'N/A'}
+                                            </span>
+                                        </td>
+                                        <td className='p-4 text-center text-sm text-gray-700'>
+                                            {product.createdAt ? new Date(product.createdAt).toLocaleDateString() : 'N/A'}
+                                        </td>
+                                        <td className='p-4'>
+                                            <div className="flex gap-2 justify-center">
+                                                <button 
+                                                    onClick={() => { setSelectedProduct(product); setShowViewModal(true); }} 
+                                                    className='bg-blue-100 text-blue-700 rounded-lg p-2 hover:bg-blue-200 transition-colors'
+                                                    title="View Details"
+                                                >
+                                                    <i className='bi bi-eye'></i>
+                                                </button>
+                                                <button 
+                                                    onClick={() => handleEditClick(product)} 
+                                                    className='bg-[#E6F2D9] text-[#78C726] rounded-lg p-2 hover:bg-[#d4e8c1] transition-colors'
+                                                    title="Edit Product"
+                                                >
+                                                    <i className='bi bi-pencil'></i>
+                                                </button>
+                                                <button 
+                                                    onClick={() => { setSelectedProduct(product); setDeleteModal(true); }} 
+                                                    className='bg-red-100 text-red-700 rounded-lg p-2 hover:bg-red-200 transition-colors'
+                                                    title="Delete Product"
+                                                >
+                                                    <i className='bi bi-trash'></i>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))
+                            )}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         )}
 
         {/* edit modal window */}

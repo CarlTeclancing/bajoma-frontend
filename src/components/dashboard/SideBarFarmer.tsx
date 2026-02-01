@@ -17,7 +17,6 @@ const SideBarFarmer = () => {
     <div className='hidden md:flex w-[260px] h-[100vh] p-2 flex-col overflow-y-scroll border-r-1 border-gray-300'>
         <img src={Images.logohfull} alt="" />
         <hr className='w-[90%] mt-4' />
-        <span>{change}</span>
         <div className="flex flex-col mt-4">
             <Link 
               to={'/farmer'} 

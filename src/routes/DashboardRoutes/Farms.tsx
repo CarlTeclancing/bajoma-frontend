@@ -12,13 +12,18 @@ const Farms = () => {
     const [showEditModal, setShowEditModal] = React.useState<boolean>(false);
     const [showAddModal, setShowAddModal] = React.useState<boolean>(false);
     const [selectedFarm, setSelectedFarm] = React.useState<Farm | null>(null);
-    const [editForm, setEditForm] = React.useState<FarmCreateInput>({ name: '', location: '', size: '' });
-    const [addForm, setAddForm] = React.useState<FarmCreateInput>({ name: '', location: '', size: '' });
+    const [editForm, setEditForm] = React.useState<FarmCreateInput>({ name: '', location: '', length: '', width: '', details: '' });
+    const [addForm, setAddForm] = React.useState<FarmCreateInput>({ name: '', location: '', length: '', width: '', details: '' });
+    const token = localStorage.getItem('token');
 
-
+    const getAuthHeaders = () => ({
+        headers: {
+            Authorization: token ? `Bearer ${token}` : '',
+        }
+    });
 
     const fetchFarms = () => {
-        axios.get('http://localhost:5000/api/v1/farm')
+        axios.get('http://localhost:5000/api/v1/farm', getAuthHeaders())
             .then(res => {
                 const data = Array.isArray(res.data.content) ? (res.data.content as Farm[]) : [];
                 setFarms(data);
@@ -38,7 +43,7 @@ const Farms = () => {
     const handleEdit = (farm: Farm) => {
         setSelectedFarm(farm);
         // Only copy editable fields
-        setEditForm({ name: farm.name, location: farm.location, size: farm.size });
+        setEditForm({ name: farm.name, location: farm.location, length: farm.length, width: farm.width, details: farm.details || '' });
         setShowEditModal(true);
     };
 
@@ -48,7 +53,7 @@ const Farms = () => {
 
     const handleEditSave = () => {
         if (!selectedFarm) return;
-        axios.put(`http://localhost:5000/api/v1/farm/${selectedFarm.id}`, editForm)
+        axios.put(`http://localhost:5000/api/v1/farm/${selectedFarm.id}`, editForm, getAuthHeaders())
             .then(() => {
                 fetchFarms();
                 setShowEditModal(false);
@@ -57,11 +62,17 @@ const Farms = () => {
             .catch(() => alert('Failed to update farm'));
     };
 
-    const handleDelete = (id: number) => {
+    const handleDeleteFarm = async (id: number) => {
         if (!window.confirm('Are you sure you want to delete this farm?')) return;
-        axios.delete(`http://localhost:5000/api/v1/farm/${id}`)
-            .then(() => fetchFarms())
-            .catch(() => alert('Failed to delete farm'));
+        
+        try {
+            await axios.delete(`http://localhost:5000/api/v1/farm/${id}`, getAuthHeaders());
+            alert('Farm deleted successfully');
+            fetchFarms();
+        } catch (error) {
+            console.error('Error deleting farm:', error);
+            alert('Failed to delete farm');
+        }
     };
 
     const handleAddChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -70,11 +81,11 @@ const Farms = () => {
 
     const handleAddSave = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
-        axios.post('http://localhost:5000/api/v1/farm', addForm)
+        axios.post('http://localhost:5000/api/v1/farm', addForm, getAuthHeaders())
             .then(() => {
                 fetchFarms();
                 setShowAddModal(false);
-                setAddForm({ name: '', location: '', size: '' });
+                setAddForm({ name: '', location: '', length: '', width: '', details: '' });
             })
             .catch(() => alert('Failed to add farm'));
     };
@@ -144,8 +155,10 @@ const Farms = () => {
                                 <div className="flex items-start gap-2">
                                     <i className='bi bi-rulers text-[#78C726] mt-1'></i>
                                     <div>
-                                        <p className='text-xs text-gray-500'>Farm Size</p>
-                                        <p className='text-sm font-semibold text-gray-700'>{farm.size ? `${farm.size} acres` : 'Not specified'}</p>
+                                        <p className='text-xs text-gray-500'>Farm Dimensions</p>
+                                        <p className='text-sm font-semibold text-gray-700'>
+                                            {farm.length && farm.width ? `${farm.length}m × ${farm.width}m` : 'Not specified'}
+                                        </p>
                                     </div>
                                 </div>
 
@@ -170,12 +183,12 @@ const Farms = () => {
                                     </div>
                                 )}
 
-                                {farm.description && (
+                                {farm.details && (
                                     <div className="flex items-start gap-2">
                                         <i className='bi bi-info-circle-fill text-[#78C726] mt-1'></i>
                                         <div>
-                                            <p className='text-xs text-gray-500'>Description</p>
-                                            <p className='text-sm text-gray-700'>{farm.description}</p>
+                                            <p className='text-xs text-gray-500'>Details</p>
+                                            <p className='text-sm text-gray-700'>{farm.details}</p>
                                         </div>
                                     </div>
                                 )}
@@ -206,7 +219,7 @@ const Farms = () => {
                                     Edit
                                 </button>
                                 <button 
-                                    onClick={()=>handleDelete(farm.id)} 
+                                    onClick={()=>handleDeleteFarm(farm.id)} 
                                     className='flex-1 bg-[#DF6B57] text-white rounded-lg py-2 hover:bg-[#c95d4a] transition-colors flex items-center justify-center gap-2'
                                 >
                                     <i className='bi bi-trash'></i>
@@ -229,8 +242,14 @@ const Farms = () => {
                         <label className='block mb-2'>Location
                             <input type="text" name="location" value={editForm.location || ''} onChange={handleEditChange} className='w-full p-2 border rounded mb-2' />
                         </label>
-                        <label className='block mb-2'>Size (acres)
-                            <input type="number" name="size" value={editForm.size || ''} onChange={handleEditChange} className='w-full p-2 border rounded mb-2' />
+                        <label className='block mb-2'>Length (meters)
+                            <input type="number" name="length" value={editForm.length || ''} onChange={handleEditChange} className='w-full p-2 border rounded mb-2' />
+                        </label>
+                        <label className='block mb-2'>Width (meters)
+                            <input type="number" name="width" value={editForm.width || ''} onChange={handleEditChange} className='w-full p-2 border rounded mb-2' />
+                        </label>
+                        <label className='block mb-2'>Details (optional)
+                            <textarea name="details" value={editForm.details || ''} onChange={handleEditChange} className='w-full p-2 border rounded mb-2' rows={3} />
                         </label>
                         <div className='flex justify-end gap-2 mt-4'>
                             <button className='bg-gray-300 text-black rounded p-2' onClick={()=>setShowEditModal(false)}>Cancel</button>
@@ -252,8 +271,14 @@ const Farms = () => {
                             <label className='block mb-2'>Location
                                 <input type="text" name="location" value={addForm.location || ''} onChange={handleAddChange} className='w-full p-2 border rounded mb-2' required />
                             </label>
-                            <label className='block mb-2'>Size (acres)
-                                <input type="number" name="size" value={addForm.size || ''} onChange={handleAddChange} className='w-full p-2 border rounded mb-2' required />
+                            <label className='block mb-2'>Length (meters)
+                                <input type="number" name="length" value={addForm.length || ''} onChange={handleAddChange} className='w-full p-2 border rounded mb-2' required />
+                            </label>
+                            <label className='block mb-2'>Width (meters)
+                                <input type="number" name="width" value={addForm.width || ''} onChange={handleAddChange} className='w-full p-2 border rounded mb-2' required />
+                            </label>
+                            <label className='block mb-2'>Details (optional)
+                                <textarea name="details" value={addForm.details || ''} onChange={handleAddChange} className='w-full p-2 border rounded mb-2' rows={3} />
                             </label>
                             <div className='flex justify-end gap-2 mt-4'>
                                 <button className='bg-gray-300 text-black rounded p-2' onClick={()=>setShowAddModal(false)} type="button">Cancel</button>

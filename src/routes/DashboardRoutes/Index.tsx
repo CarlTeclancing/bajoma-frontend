@@ -13,6 +13,7 @@ const Dashboard = () => {
     activeProducts: 0,
     categories: 0
   });
+  const [recentOrders, setRecentOrders] = React.useState<any[]>([]);
   const [loading, setLoading] = React.useState(true);
 
   React.useEffect(() => {
@@ -59,113 +60,168 @@ const Dashboard = () => {
       <p>Overview of your BAJOMA platform</p>
 
       {loading ? (
-        <div className="text-center py-12">
+        <div className="flex justify-center items-center h-64">
           <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-[#78C726]"></div>
-          <p className='mt-4 text-gray-600'>Loading dashboard...</p>
+          <p className='ml-4'>Loading dashboard...</p>
         </div>
       ) : (
       <>
-      <div className='flex flex-wrap w-[100%] md:h-[200px] h-auto rounded p-6 mt-4 bg-[#FFFFFF] border-gray-300 border-2 justify-between items-center'>
-
-        <div className="flex justify-center items-center mt-4 md:mt-0">
-          <i className='bi bi-box text-4xl text-[#58AC01]'></i>
-          <div className="flex flex-col p-2 ">
-            <p className='text-2xl'>Total Products</p>
-            <h2 className='text-4xl font-bold'>{stats.totalProducts}</h2>
+      {/* Stats Cards */}
+      <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mt-6'>
+        <div className="bg-white rounded-2xl p-6 border-2 border-gray-200 hover:border-[#90C955] transition-all">
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 bg-[#E6F2D9] rounded-lg flex items-center justify-center">
+              <i className='bi bi-box text-2xl text-[#78C726]'></i>
+            </div>
+            <div>
+              <p className='text-sm text-gray-600'>Total Products</p>
+              <h2 className='text-2xl font-bold text-gray-800'>{stats.totalProducts}</h2>
+            </div>
           </div>
         </div>
 
-        <div className="w-[100%] md:w-[2px] bg-gray-300 h-[1px] md:h-full mt-2"></div>
-
-        <div className="flex justify-center items-center mt-4 md:mt-0">
-          <i className='bi bi-basket text-4xl text-[#58AC01]'></i>
-          <div className="flex flex-col p-2 ">
-            <p className='text-2xl'>Total Orders</p>
-            <h2 className='text-4xl font-bold'>{stats.totalOrders}</h2>
+        <div className="bg-white rounded-2xl p-6 border-2 border-gray-200 hover:border-[#90C955] transition-all">
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 bg-[#E6F2D9] rounded-lg flex items-center justify-center">
+              <i className='bi bi-basket text-2xl text-[#78C726]'></i>
+            </div>
+            <div>
+              <p className='text-sm text-gray-600'>Total Orders</p>
+              <h2 className='text-2xl font-bold text-gray-800'>{stats.totalOrders}</h2>
+            </div>
           </div>
         </div>
 
-        <div className="w-[100%] md:w-[2px] bg-gray-300 h-[1px] md:h-full mt-2"></div>
-
-        <div className="flex justify-center items-center mt-4 md:mt-0">
-          <i className='bi bi-person text-4xl text-[#58AC01]'></i>
-          <div className="flex flex-col p-2 ">
-            <p className='text-2xl'>Total Users</p>
-            <h2 className='text-4xl font-bold'>{stats.totalUsers}</h2>
+        <div className="bg-white rounded-2xl p-6 border-2 border-gray-200 hover:border-[#90C955] transition-all">
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 bg-[#E6F2D9] rounded-lg flex items-center justify-center">
+              <i className='bi bi-person text-2xl text-[#78C726]'></i>
+            </div>
+            <div>
+              <p className='text-sm text-gray-600'>Total Users</p>
+              <h2 className='text-2xl font-bold text-gray-800'>{stats.totalUsers}</h2>
+            </div>
           </div>
         </div>
 
-        <div className="w-[100%] md:w-[2px] bg-gray-300 h-[1px] md:h-full mt-2"></div>
-
-        <div className="flex justify-center items-center mt-4 md:mt-0">
-          <i className='bi bi-wallet text-4xl text-[#58AC01]'></i>
-          <div className="flex flex-col p-2 ">
-            <p className='text-2xl'>Total Revenue</p>
-            <h2 className='text-4xl font-bold'>${stats.totalRevenue.toFixed(2)}</h2>
+        <div className="bg-white rounded-2xl p-6 border-2 border-gray-200 hover:border-[#90C955] transition-all">
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 bg-amber-100 rounded-lg flex items-center justify-center">
+              <i className='bi bi-clock text-2xl text-amber-600'></i>
+            </div>
+            <div>
+              <p className='text-sm text-gray-600'>Pending Orders</p>
+              <h2 className='text-2xl font-bold text-gray-800'>{stats.pendingOrders}</h2>
+            </div>
           </div>
         </div>
-      </div>
 
-      {/*Platform activities */}
-      <h1 className='text-2xl font-bold mt-12'>Platform Activities</h1>
-      <div className="flex w-full flex-col md:flex-row md:h-auto h-auto md:justify-between items-center pt-6">
-        <div className=" w-full md:w-[49%] flex-col bg-white h-auto rounded md:p-6 p-0" >
-          <div className="flex flex-col w-full m-2 p-2 border border-[#78C726] rounded">
-            <h1 className='text-xl font-bold'>Manage Orders</h1>
-            <p>{stats.pendingOrders} Pending orders to process</p>
+        <div className="bg-white rounded-2xl p-6 border-2 border-gray-200 hover:border-[#90C955] transition-all">
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 bg-[#E6F2D9] rounded-lg flex items-center justify-center">
+              <i className='bi bi-cash-stack text-2xl text-[#78C726]'></i>
+            </div>
+            <div>
+              <p className='text-sm text-gray-600'>Revenue</p>
+              <h2 className='text-2xl font-bold text-[#78C726]'>${stats.totalRevenue.toFixed(2)}</h2>
+            </div>
           </div>
-        
-          <div className="flex flex-col w-full m-2 p-2 border border-[#78C726] rounded">
-            <h1 className='text-xl font-bold'>Total Categories</h1>
-            <p>{stats.categories} categories available</p>
-          </div>
-        
-          <div className="flex flex-col w-full m-2 p-2 border border-[#78C726] rounded">
-            <h1 className='text-xl font-bold'>View Messages</h1>
-            <p>Check customer inquiries</p>
-          </div>
-        
-        </div>
-        <div className=" w-full md:w-[49%] flex-col bg-white h-auto rounded md:p-6 p-0" >
-          
-          <div className="flex flex-col w-full m-2 p-2 border border-[#78C726] rounded">
-            <h1 className='text-xl font-bold'>Active Products</h1>
-            <p>{stats.activeProducts} products currently active</p>
-          </div>
-        
-          <div className="flex flex-col w-full m-2 p-2 border border-[#78C726] rounded">
-            <h1 className='text-xl font-bold'>Registered Users</h1>
-            <p>{stats.totalUsers} users registered</p>
-          </div>
-        
-          <div className="flex flex-col w-full m-2 p-2 border border-[#78C726] rounded">
-            <h1 className='text-xl font-bold'>Total Revenue</h1>
-            <p>${stats.totalRevenue.toFixed(2)}</p>
-          </div>
-        
         </div>
       </div>
 
-      <div className="flex w-full flex-col md:flex-row md:h-auto h-auto md:justify-between items-center pt-6">
-        <div className=" w-full md:w-auto flex-col bg-white h-auto rounded md:p-6 p-0" >
-          <div className="flex flex-col w-full m-2 p-2 border border-[#78C726] rounded">
-            <h1 className='text-xl font-bold'>Pending Orders</h1>
-            <p>{stats.pendingOrders} orders awaiting action</p>
+      {/* Platform Activities & Quick Actions */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-8">
+        {/* Quick Actions */}
+        <div className="bg-white rounded-2xl border-2 border-gray-200 p-6">
+          <h2 className='text-xl font-bold mb-4'>Quick Actions</h2>
+
+          <div className="flex items-center justify-between p-4 border-2 border-[#E6F2D9] rounded-lg mb-3 hover:border-[#90C955] transition-all">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-amber-100 rounded-lg flex items-center justify-center">
+                <i className='bi bi-basket text-xl text-amber-600'></i>
+              </div>
+              <div>
+                <h3 className='font-semibold text-gray-800'>Manage Orders</h3>
+                <p className='text-sm text-gray-500'>{stats.pendingOrders} Pending orders to process</p>
+              </div>
+            </div>
+            <i className='bi bi-chevron-right text-gray-400'></i>
           </div>
-        </div>
-        <div className=" w-full md:w-auto flex-col bg-white h-auto rounded md:p-6 p-0" >
-          <div className="flex flex-col w-full m-2 p-2 border border-[#78C726] rounded">
-            <h1 className='text-xl font-bold'>Categories</h1>
-            <p>{stats.categories} total categories</p>
+
+          <div className="flex items-center justify-between p-4 border-2 border-[#E6F2D9] rounded-lg mb-3 hover:border-[#90C955] transition-all">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-[#E6F2D9] rounded-lg flex items-center justify-center">
+                <i className='bi bi-box text-xl text-[#78C726]'></i>
+              </div>
+              <div>
+                <h3 className='font-semibold text-gray-800'>Manage Products</h3>
+                <p className='text-sm text-gray-500'>{stats.totalProducts} Active products</p>
+              </div>
+            </div>
+            <i className='bi bi-chevron-right text-gray-400'></i>
           </div>
-        </div>
-        <div className=" w-full md:w-auto flex-col bg-white h-auto rounded md:p-6 p-0" >
-          <div className="flex flex-col w-full m-2 p-2 border border-[#78C726] rounded">
-            <h1 className='text-xl font-bold'>All Products</h1>
-            <p>{stats.totalProducts} products in system</p>
+
+          <div className="flex items-center justify-between p-4 border-2 border-[#E6F2D9] rounded-lg hover:border-[#90C955] transition-all">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                <i className='bi bi-chat text-xl text-blue-600'></i>
+              </div>
+              <div>
+                <h3 className='font-semibold text-gray-800'>View Messages</h3>
+                <p className='text-sm text-gray-500'>Chat with customers</p>
+              </div>
+            </div>
+            <i className='bi bi-chevron-right text-gray-400'></i>
           </div>
         </div>
 
+        {/* Platform Stats */}
+        <div className="bg-white rounded-2xl border-2 border-gray-200 p-6">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className='text-xl font-bold'>Platform Overview</h2>
+          </div>
+
+          <div className="space-y-3">
+            <div className="flex items-center justify-between p-3 border border-gray-200 rounded-lg hover:bg-gray-50">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-[#E6F2D9] rounded-lg flex items-center justify-center">
+                  <i className='bi bi-tag text-lg text-[#78C726]'></i>
+                </div>
+                <div>
+                  <p className='font-semibold text-sm text-gray-800'>Categories</p>
+                  <p className='text-xs text-gray-500'>{stats.categories} total categories</p>
+                </div>
+              </div>
+              <p className='font-bold text-[#78C726]'>{stats.categories}</p>
+            </div>
+
+            <div className="flex items-center justify-between p-3 border border-gray-200 rounded-lg hover:bg-gray-50">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
+                  <i className='bi bi-check-circle text-lg text-green-600'></i>
+                </div>
+                <div>
+                  <p className='font-semibold text-sm text-gray-800'>Active Products</p>
+                  <p className='text-xs text-gray-500'>{stats.activeProducts} currently active</p>
+                </div>
+              </div>
+              <p className='font-bold text-[#78C726]'>{stats.activeProducts}</p>
+            </div>
+
+            <div className="flex items-center justify-between p-3 border border-gray-200 rounded-lg hover:bg-gray-50">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                  <i className='bi bi-people text-lg text-blue-600'></i>
+                </div>
+                <div>
+                  <p className='font-semibold text-sm text-gray-800'>Registered Users</p>
+                  <p className='text-xs text-gray-500'>{stats.totalUsers} users registered</p>
+                </div>
+              </div>
+              <p className='font-bold text-[#78C726]'>{stats.totalUsers}</p>
+            </div>
+          </div>
+        </div>
       </div>
       </>
       )}
