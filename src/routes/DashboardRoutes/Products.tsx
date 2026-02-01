@@ -345,12 +345,6 @@ const Products = () => {
                 </div>
             </div>
         )}
-                            </tr>
-                        ))
-                    )}
-                </tbody>
-            </table>
-        )}
 
         {/* edit modal window */}
         <div className={showEditModal?'flex w-full h-screen justify-center overflow-hidden items-center fixed top-0 left-0 bg-black/50 bg-opacity-50 z-20':'hidden overflow-hidden'}>

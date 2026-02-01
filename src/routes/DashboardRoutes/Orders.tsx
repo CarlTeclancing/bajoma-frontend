@@ -6,11 +6,15 @@ import { BACKEND_URL } from '../../global';
 const Orders = () => {
     const [orders, setOrders] = React.useState<any[]>([]);
     const [loading, setLoading] = React.useState(true);
-    const [statusFilter, setStatusFilter] = React.useState('all');
+    const [refreshKey, setRefreshKey] = React.useState(0);
 
     React.useEffect(() => {
         fetchOrders();
-    }, []);
+        const interval = setInterval(() => {
+            fetchOrders();
+        }, 30000);
+        return () => clearInterval(interval);
+    }, [refreshKey]);
 
     const fetchOrders = async () => {
         try {
@@ -20,138 +24,263 @@ const Orders = () => {
             setLoading(false);
         } catch (error) {
             console.error('Error fetching orders:', error);
-            setOrders([]);
             setLoading(false);
         }
     };
 
-    const handleStatusUpdate = async (orderId: number, newStatus: string) => {
-        try {
-            await axios.put(`${BACKEND_URL}/orders/${orderId}`, { status: newStatus });
-            alert(`Order ${newStatus.toLowerCase()} successfully!`);
-            fetchOrders();
-        } catch (error) {
-            console.error('Error updating order:', error);
-            alert('Failed to update order status');
+    const getStatusColor = (status: string) => {
+        switch (status?.toLowerCase()) {
+            case 'pending': return 'bg-amber-500';
+            case 'accepted': return 'bg-blue-500';
+            case 'completed': return 'bg-blue-600';
+            case 'delivered': return 'bg-green-500';
+            case 'cancelled': return 'bg-red-500';
+            default: return 'bg-gray-500';
         }
     };
 
-    const filteredOrders = statusFilter === 'all' 
-        ? orders 
-        : orders.filter(order => order.status?.toLowerCase() === statusFilter.toLowerCase());
+    const handleRefresh = () => {
+        setLoading(true);
+        setRefreshKey(prev => prev + 1);
+    };
 
-    const orderCounts = {
-        all: orders.length,
-        pending: orders.filter(o => o.status === 'PENDING').length,
-        accepted: orders.filter(o => o.status === 'ACCEPTED').length,
-        rejected: orders.filter(o => o.status === 'REJECTED').length
+    const handleAcceptOrder = async (orderId: number) => {
+        try {
+            await axios.put(`${BACKEND_URL}/orders/${orderId}`, { status: 'accepted' });
+            alert('Order accepted successfully!');
+            fetchOrders();
+        } catch (error) {
+            console.error('Error accepting order:', error);
+            alert('Failed to accept order. Please try again.');
+        }
+    };
+
+    const handleMarkDelivered = async (orderId: number) => {
+        try {
+            await axios.put(`${BACKEND_URL}/orders/${orderId}`, { status: 'delivered' });
+            alert('Order marked as delivered!');
+            fetchOrders();
+        } catch (error) {
+            console.error('Error updating order:', error);
+            alert('Failed to update order status.');
+        }
+    };
+
+    const handleCancelOrder = async (orderId: number) => {
+        if (!window.confirm('Are you sure you want to cancel this order?')) return;
+        try {
+            await axios.put(`${BACKEND_URL}/orders/${orderId}`, { status: 'cancelled' });
+            alert('Order cancelled successfully.');
+            fetchOrders();
+        } catch (error) {
+            console.error('Error cancelling order:', error);
+            alert('Failed to cancel order.');
+        }
+    };
+
+    if (loading) {
+        return (
+            <DashboardLayout>
+                <div className="flex justify-center items-center h-64">
+                    <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-[#78C726]"></div>
+                    <p className='ml-4 text-gray-600'>Loading orders...</p>
+                </div>
+            </DashboardLayout>
+        );
+    }
+
+    const stats = {
+        total: orders.length,
+        pending: orders.filter(o => o.status?.toLowerCase() === 'pending').length,
+        accepted: orders.filter(o => o.status?.toLowerCase() === 'accepted').length,
+        delivered: orders.filter(o => o.status?.toLowerCase() === 'delivered').length,
+        cancelled: orders.filter(o => o.status?.toLowerCase() === 'cancelled').length
     };
 
     return (
         <DashboardLayout>
-            <h1 className='text-2xl font-bold'>Order Management</h1>
-            <p>View and manage all orders</p>
-
-            <div className="flex gap-2 mt-4 mb-4">
+            <div className='flex justify-between items-center mb-6'>
+                <div>
+                    <h1 className='text-2xl font-bold'>Order Management</h1>
+                    <p className='text-gray-600'>Manage orders for your products • Auto-refreshes every 30s</p>
+                </div>
                 <button 
-                    onClick={() => setStatusFilter('all')}
-                    className={`font-bold rounded p-2 cursor-pointer ${
-                        statusFilter === 'all' ? 'bg-[#78C726] text-white' : 'bg-white text-[#78C726] border border-[#78C726]'
-                    }`}
+                    onClick={handleRefresh}
+                    className='bg-[#90C955] text-white px-4 py-2 rounded-lg hover:bg-[#7ab043] flex items-center gap-2 transition-all'
+                    disabled={loading}
                 >
-                    All Orders ({orderCounts.all})
-                </button>
-                <button 
-                    onClick={() => setStatusFilter('pending')}
-                    className={`font-bold rounded p-2 cursor-pointer ${
-                        statusFilter === 'pending' ? 'bg-amber-500 text-white' : 'bg-white text-amber-500 border border-amber-500'
-                    }`}
-                >
-                    Pending ({orderCounts.pending})
-                </button>
-                <button 
-                    onClick={() => setStatusFilter('accepted')}
-                    className={`font-bold rounded p-2 cursor-pointer ${
-                        statusFilter === 'accepted' ? 'bg-green-500 text-white' : 'bg-white text-green-500 border border-green-500'
-                    }`}
-                >
-                    Accepted ({orderCounts.accepted})
-                </button>
-                <button 
-                    onClick={() => setStatusFilter('rejected')}
-                    className={`font-bold rounded p-2 cursor-pointer ${
-                        statusFilter === 'rejected' ? 'bg-red-500 text-white' : 'bg-white text-red-500 border border-red-500'
-                    }`}
-                >
-                    Rejected ({orderCounts.rejected})
+                    <i className={`bi bi-arrow-clockwise ${loading ? 'animate-spin' : ''}`}></i>
+                    {loading ? 'Loading...' : 'Refresh'}
                 </button>
             </div>
 
-            {loading ? (
-                <div className="text-center py-12">
-                    <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-[#78C726]"></div>
-                    <p className='mt-4 text-gray-600'>Loading orders...</p>
+            {/* Stats Cards */}
+            <div className='grid grid-cols-1 md:grid-cols-5 gap-4 mb-6'>
+                <div className="bg-white rounded-2xl p-6 border-2 border-gray-200 hover:border-[#90C955] transition-all">
+                    <div className="flex items-center gap-3">
+                        <div className="w-12 h-12 bg-[#E6F2D9] rounded-lg flex items-center justify-center">
+                            <i className='bi bi-basket text-2xl text-[#78C726]'></i>
+                        </div>
+                        <div>
+                            <p className='text-sm text-gray-600'>Total</p>
+                            <h2 className='text-2xl font-bold text-gray-800'>{stats.total}</h2>
+                        </div>
+                    </div>
                 </div>
-            ) : (
-            <div className="flex w-full flex-col gap-4 mt-4">
-                {filteredOrders.length === 0 ? (
-                    <div className="w-full text-center py-12 text-gray-500">
-                        No orders found
+                <div className="bg-white rounded-2xl p-6 border-2 border-gray-200 hover:border-amber-300 transition-all">
+                    <div className="flex items-center gap-3">
+                        <div className="w-12 h-12 bg-amber-100 rounded-lg flex items-center justify-center">
+                            <i className='bi bi-clock text-2xl text-amber-600'></i>
+                        </div>
+                        <div>
+                            <p className='text-sm text-gray-600'>Pending</p>
+                            <h2 className='text-2xl font-bold text-amber-600'>{stats.pending}</h2>
+                        </div>
+                    </div>
+                </div>
+                <div className="bg-white rounded-2xl p-6 border-2 border-gray-200 hover:border-blue-300 transition-all">
+                    <div className="flex items-center gap-3">
+                        <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                            <i className='bi bi-check2-square text-2xl text-blue-600'></i>
+                        </div>
+                        <div>
+                            <p className='text-sm text-gray-600'>Accepted</p>
+                            <h2 className='text-2xl font-bold text-blue-600'>{stats.accepted}</h2>
+                        </div>
+                    </div>
+                </div>
+                <div className="bg-white rounded-2xl p-6 border-2 border-gray-200 hover:border-green-300 transition-all">
+                    <div className="flex items-center gap-3">
+                        <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+                            <i className='bi bi-check-circle text-2xl text-green-600'></i>
+                        </div>
+                        <div>
+                            <p className='text-sm text-gray-600'>Delivered</p>
+                            <h2 className='text-2xl font-bold text-green-600'>{stats.delivered}</h2>
+                        </div>
+                    </div>
+                </div>
+                <div className="bg-white rounded-2xl p-6 border-2 border-gray-200 hover:border-red-300 transition-all">
+                    <div className="flex items-center gap-3">
+                        <div className="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center">
+                            <i className='bi bi-x-circle text-2xl text-red-600'></i>
+                        </div>
+                        <div>
+                            <p className='text-sm text-gray-600'>Cancelled</p>
+                            <h2 className='text-2xl font-bold text-red-600'>{stats.cancelled}</h2>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {/* Orders Table */}
+            <div className="bg-white rounded-2xl border-2 border-gray-200 overflow-hidden">
+                {orders.length === 0 ? (
+                    <div className="text-center py-12">
+                        <i className='bi bi-inbox text-5xl text-gray-300'></i>
+                        <p className="text-gray-500 text-lg mt-3">No orders yet</p>
+                        <p className="text-gray-400">Orders for your products will appear here</p>
                     </div>
                 ) : (
-                    filteredOrders.map(order => (
-                        <div key={order.id} className="flex w-full flex-col gap-4 bg-[#E6F2D9] p-4 rounded-2xl">
-                            <div className="flex w-full bg-[#E6F2D9] p-4 rounded justify-between items-start">
-                                <div className="flex flex-col">
-                                    <h2 className='text-2xl font-bold'>Order #{order.id}</h2>
-                                    <p className='m-2'><span className='font-semibold'>Reference:</span> {order.reference || 'N/A'}</p>
-                                    <p className='m-2'><span className='font-semibold'>Customer:</span> {order.user?.name || 'N/A'}</p>
-                                    <p className='m-2'><span className='font-semibold'>Email:</span> {order.user?.email || 'N/A'}</p>
-                                    <p className='m-2'><span className='font-semibold'>Phone:</span> {order.user?.phone || 'N/A'}</p>
-                                    <p className='m-2'><span className='font-semibold'>Date:</span> {order.createdAt ? new Date(order.createdAt).toLocaleDateString() : 'N/A'}</p>
-                                    <p className='m-2'><span className='font-semibold'>Time:</span> {order.createdAt ? new Date(order.createdAt).toLocaleTimeString() : 'N/A'}</p>
-                                </div>
-                                <span className={`p-2 px-4 rounded-2xl text-white font-semibold ${
-                                    order.status === 'PENDING' ? 'bg-amber-500' :
-                                    order.status === 'ACCEPTED' ? 'bg-green-500' :
-                                    'bg-red-500'
-                                }`}>
-                                    {order.status || 'PENDING'}
-                                </span>
-                            </div>
-
-                            <div className="flex w-full justify-between bg-white p-4 rounded">
-                                <h1 className='text-2xl mt-2 font-semibold'>Total Amount</h1>
-                                <h1 className='text-2xl font-bold mt-2 text-[#78C726]'>${order.amount?.toFixed(2) || '0.00'}</h1>
-                            </div>
-
-                            <div className='p-2 flex justify-end gap-2'>
-                                {order.status !== 'ACCEPTED' && (
-                                    <button 
-                                        onClick={() => handleStatusUpdate(order.id, 'ACCEPTED')}
-                                        className='bg-[#78C726] text-white rounded p-2 px-4 hover:bg-[#6ab31f]'
-                                    >
-                                        <i className='bi bi-check-circle m-2'></i>
-                                        <span>Accept Order</span>
-                                    </button>
-                                )}
-                                {order.status !== 'REJECTED' && order.status !== 'ACCEPTED' && (
-                                    <button 
-                                        onClick={() => handleStatusUpdate(order.id, 'REJECTED')}
-                                        className='bg-[#fc3b3b] text-white rounded p-2 px-4 hover:bg-[#e03232]'
-                                    >
-                                        <i className='bi bi-x-circle m-2'></i>
-                                        <span>Reject Order</span>
-                                    </button>
-                                )}
-                            </div>
-                        </div>
-                    ))
+                    <div className="overflow-x-auto">
+                        <table className='w-full'>
+                            <thead className='bg-[#E6F2D9]'>
+                                <tr>
+                                    <th className='text-left p-4 font-semibold text-gray-800'>Order ID</th>
+                                    <th className='text-left p-4 font-semibold text-gray-800'>Customer</th>
+                                    <th className='text-left p-4 font-semibold text-gray-800'>Product</th>
+                                    <th className='text-center p-4 font-semibold text-gray-800'>Quantity</th>
+                                    <th className='text-right p-4 font-semibold text-gray-800'>Total</th>
+                                    <th className='text-center p-4 font-semibold text-gray-800'>Status</th>
+                                    <th className='text-center p-4 font-semibold text-gray-800'>Date</th>
+                                    <th className='text-center p-4 font-semibold text-gray-800'>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {orders.map((order, index) => (
+                                    <tr key={order.id} className={`border-t ${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'} hover:bg-[#F5F9F0] transition-all`}>
+                                        <td className='p-4'>
+                                            <span className='font-semibold text-gray-800'>#{order.id}</span>
+                                        </td>
+                                        <td className='p-4'>
+                                            <div>
+                                                <p className='font-semibold text-gray-800'>{order.User?.name || order.user?.name || 'N/A'}</p>
+                                                <p className='text-sm text-gray-500'>{order.User?.email || order.user?.email || 'N/A'}</p>
+                                                <p className='text-sm text-gray-500'>{order.User?.phone || order.user?.phone || 'N/A'}</p>
+                                            </div>
+                                        </td>
+                                        <td className='p-4'>
+                                            <div className='font-semibold text-gray-700'>{order.Product?.name || order.product?.name || 'N/A'}</div>
+                                            <div className='text-sm text-gray-500'>${order.Product?.price || order.product?.price || 0} per unit</div>
+                                        </td>
+                                        <td className='p-4 text-center'>
+                                            <span className='bg-[#E6F2D9] px-3 py-1 rounded-full font-semibold text-[#78C726]'>
+                                                {order.quantity}
+                                            </span>
+                                        </td>
+                                        <td className='p-4 text-right'>
+                                            <span className='text-lg font-bold text-[#78C726]'>${order.total_price || order.amount?.toFixed(2) || '0.00'}</span>
+                                        </td>
+                                        <td className='p-4 text-center'>
+                                            <span className={`px-3 py-1 rounded-full text-white font-semibold text-sm ${getStatusColor(order.status)}`}>
+                                                {order.status || 'Pending'}
+                                            </span>
+                                        </td>
+                                        <td className='p-4 text-center text-sm text-gray-600'>
+                                            <div>{order.createdAt ? new Date(order.createdAt).toLocaleDateString() : 'N/A'}</div>
+                                            <div className='text-xs text-gray-500'>{order.createdAt ? new Date(order.createdAt).toLocaleTimeString() : 'N/A'}</div>
+                                        </td>
+                                        <td className='p-4'>
+                                            <div className='flex justify-center gap-2'>
+                                                {order.status?.toLowerCase() === 'pending' && (
+                                                    <>
+                                                        <button 
+                                                            onClick={() => handleAcceptOrder(order.id)} 
+                                                            className='bg-[#78C726] hover:bg-[#6ab01e] text-white rounded-lg px-3 py-2 text-sm transition-all font-semibold'
+                                                            title="Accept Order"
+                                                        >
+                                                            Accept
+                                                        </button>
+                                                        <button 
+                                                            onClick={() => handleCancelOrder(order.id)} 
+                                                            className='bg-red-500 hover:bg-red-600 text-white rounded-lg p-2 text-sm transition-all'
+                                                            title="Decline Order"
+                                                        >
+                                                            <i className='bi bi-x-lg'></i>
+                                                        </button>
+                                                    </>
+                                                )}
+                                                {(order.status?.toLowerCase() === 'accepted' || order.status?.toLowerCase() === 'completed') && (
+                                                    <>
+                                                        <button 
+                                                            onClick={() => handleMarkDelivered(order.id)} 
+                                                            className='bg-green-500 hover:bg-green-600 text-white rounded-lg px-3 py-2 text-sm transition-all font-semibold'
+                                                            title="Mark as Delivered"
+                                                        >
+                                                            Deliver
+                                                        </button>
+                                                        <button 
+                                                            onClick={() => handleCancelOrder(order.id)} 
+                                                            className='bg-red-500 hover:bg-red-600 text-white rounded-lg p-2 text-sm transition-all'
+                                                            title="Cancel Order"
+                                                        >
+                                                            <i className='bi bi-x-lg'></i>
+                                                        </button>
+                                                    </>
+                                                )}
+                                                {(order.status?.toLowerCase() === 'delivered' || order.status?.toLowerCase() === 'cancelled') && (
+                                                    <span className='text-gray-400 text-sm italic'>Completed</span>
+                                                )}
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
                 )}
             </div>
-            )}
         </DashboardLayout>
-    )
+    );
 }
 
-export default Orders
+export default Orders;
