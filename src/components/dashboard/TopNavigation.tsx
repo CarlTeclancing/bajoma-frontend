@@ -4,15 +4,27 @@ import { Link } from 'react-router-dom';
 import axios from 'axios';
 import { BACKEND_URL } from '../../global';
 import { useAuth } from '../../hooks/auth';
+import { authStorage } from '../../config/storage.config';
 
 const TopNavigation = () => {
     const [menuOpen, setMenuOpen] = React.useState(false);
     const [change, setChange] = React.useState(0);
     const [pendingOrdersCount, setPendingOrdersCount] = React.useState(0);
     const [adminNotificationCount, setAdminNotificationCount] = React.useState(0);
+    const [profileImage, setProfileImage] = React.useState<string>('');
     const { currentUser } = useAuth();
     const location = window.location.pathname;
     const isFarmerDashboard = location.startsWith('/farmer');
+
+    // Load profile image from localStorage
+    React.useEffect(() => {
+        if (currentUser?.profileimg) {
+            const imageUrl = currentUser.profileimg.startsWith('http') 
+                ? currentUser.profileimg 
+                : `http://localhost:5000${currentUser.profileimg}`;
+            setProfileImage(imageUrl);
+        }
+    }, [currentUser]);
 
     // Fetch pending orders count for farmers
     React.useEffect(() => {
@@ -103,7 +115,7 @@ const TopNavigation = () => {
                   )}
                 </button>
               </Link>
-                <img src={Images.profileimg} alt="profile" className='w-10 h-10 rounded-full ml-4'/>
+                <img src={profileImage || Images.profileimg} alt="profile" className='w-10 h-10 rounded-full ml-4 object-cover border-2 border-[#E6F2D9]'/>
                 <div className='flex flex-col ml-2'>
                     <span className='font-semibold'>{currentUser?.name || 'User'}</span>
                     <span className='text-xs text-gray-500'>{currentUser?.email || ''}</span>
@@ -137,7 +149,7 @@ const TopNavigation = () => {
                   )}
                 </button>
               </Link>
-                <img src={Images.profileimg} alt="profile" className='w-10 h-10 rounded-full ml-4'/>
+                <img src={profileImage || Images.profileimg} alt="profile" className='w-10 h-10 rounded-full ml-4 object-cover border-2 border-[#E6F2D9]'/>
                 <div className='flex flex-col ml-2'>
                     <span className='font-semibold text-sm'>{currentUser?.name || 'User'}</span>
                     <span className='text-xs text-gray-500'>{currentUser?.account_type || ''}</span>

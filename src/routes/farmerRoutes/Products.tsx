@@ -15,6 +15,9 @@ const FarmerProducts = () => {
     const [selectedProduct, setSelectedProduct] = React.useState<any | null>(null);
     const [searchTerm, setSearchTerm] = React.useState('');
     const [currentUser, setCurrentUser] = React.useState<any>(null);
+    const [imageFile, setImageFile] = React.useState<File | null>(null);
+    const [imagePreview, setImagePreview] = React.useState<string>('');
+    const [uploading, setUploading] = React.useState(false);
     const [formData, setFormData] = React.useState({
         name: '',
         description: '',
@@ -22,6 +25,7 @@ const FarmerProducts = () => {
         quantity: '',
         location: '',
         category_id: '',
+        image: '',
         status: 'ACTIF'
     });
 
@@ -93,9 +97,27 @@ const FarmerProducts = () => {
         }
 
         try {
-            // Include user_id when creating product
+            let imageUrl = formData.image || '';
+            
+            // Upload image first if selected
+            if (imageFile) {
+                setUploading(true);
+                const imageFormData = new FormData();
+                imageFormData.append('productImage', imageFile);
+                
+                console.log('Uploading product image...');
+                const uploadResponse = await axios.post(`${BACKEND_URL}/product/upload-image`, imageFormData, {
+                    headers: { 'Content-Type': 'multipart/form-data' }
+                });
+                
+                imageUrl = uploadResponse.data.imageUrl;
+                console.log('Image uploaded successfully:', imageUrl);
+            }
+            
+            // Include user_id and image when creating product
             const productData = {
                 ...formData,
+                image: imageUrl,
                 user_id: currentUser.id
             };
             
@@ -107,12 +129,16 @@ const FarmerProducts = () => {
             alert('Product added successfully!');
             setShowAddModal(false);
             resetForm();
+            setImageFile(null);
+            setImagePreview(null);
             
-            // Refetch products to update the list
+            // Refetch products to update the list with new image
             await fetchProducts();
         } catch (error) {
             console.error('Error adding product:', error);
             alert('Failed to add product');
+        } finally {
+            setUploading(false);
         }
     };
 
@@ -121,25 +147,49 @@ const FarmerProducts = () => {
         if (!selectedProduct) return;
         
         try {
-            // Ensure user_id is preserved when updating
+            let imageUrl = formData.image || selectedProduct.image;
+            
+            // Upload image first if a new one is selected
+            if (imageFile) {
+                setUploading(true);
+                const imageFormData = new FormData();
+                imageFormData.append('productImage', imageFile);
+                
+                console.log('Uploading new product image...');
+                const uploadResponse = await axios.post(`${BACKEND_URL}/product/upload-image`, imageFormData, {
+                    headers: { 'Content-Type': 'multipart/form-data' }
+                });
+                
+                imageUrl = uploadResponse.data.imageUrl;
+                console.log('Image uploaded successfully:', imageUrl);
+            }
+            
+            // Ensure user_id is preserved and image URL is included
             const updateData = {
                 ...formData,
+                image: imageUrl,
                 user_id: selectedProduct.user_id || currentUser?.id
             };
             
             console.log('Updating product with data:', updateData);
             
-            await axios.put(`${BACKEND_URL}/product/${selectedProduct.id}`, updateData);
+            const response = await axios.put(`${BACKEND_URL}/product/${selectedProduct.id}`, updateData);
+            console.log('Product updated:', response.data);
+            
             alert('Product updated successfully!');
             setShowEditModal(false);
             setSelectedProduct(null);
             resetForm();
+            setImageFile(null);
+            setImagePreview(null);
             
-            // Refetch products to update the list
+            // Refetch products to update the list with new image
             await fetchProducts();
         } catch (error) {
             console.error('Error updating product:', error);
             alert('Failed to update product');
+        } finally {
+            setUploading(false);
         }
     };
 
@@ -166,6 +216,7 @@ const FarmerProducts = () => {
             quantity: product.quantity || '',
             location: product.location || '',
             category_id: product.category_id || '',
+            image: product.image || '',
             status: product.status || 'ACTIF'
         });
         setShowEditModal(true);
@@ -184,8 +235,24 @@ const FarmerProducts = () => {
             quantity: '',
             location: '',
             category_id: '',
+            image: '',
             status: 'ACTIF'
         });
+        setSelectedProduct(null);
+        setImageFile(null);
+        setImagePreview('');
+    };
+
+    const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (file) {
+            setImageFile(file);
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                setImagePreview(reader.result as string);
+            };
+            reader.readAsDataURL(file);
+        }
     };
 
     const filteredProducts = searchTerm
@@ -323,8 +390,26 @@ const FarmerProducts = () => {
                     filteredProducts.map(product => (
                         <tr key={product.id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
                             <td className='p-4'>
-                                <div className="font-medium text-gray-800">{product.name}</div>
-                                <div className="text-sm text-gray-500">{product.location || 'N/A'}</div>
+                                <div className="flex items-center gap-3">
+                                    {product.image ? (
+                                        <img 
+                                            src={product.image.startsWith('http') ? product.image : `http://localhost:5000${product.image}`} 
+                                            alt={product.name} 
+                                            className='w-12 h-12 object-cover rounded-lg border-2 border-gray-200'
+                                            onError={(e) => {
+                                                e.currentTarget.style.display = 'none';
+                                                e.currentTarget.nextElementSibling?.classList.remove('hidden');
+                                            }}
+                                        />
+                                    ) : null}
+                                    <div className={`w-12 h-12 bg-gray-200 rounded-lg flex items-center justify-center ${product.image ? 'hidden' : ''}`}>
+                                        <i className='bi bi-image text-gray-400'></i>
+                                    </div>
+                                    <div>
+                                        <div className="font-medium text-gray-800">{product.name}</div>
+                                        <div className="text-sm text-gray-500">{product.location || 'N/A'}</div>
+                                    </div>
+                                </div>
                             </td>
                             <td className='p-4'>
                                 <span className="inline-flex items-center px-2 py-1 rounded-lg bg-gray-100 text-gray-700">
@@ -371,44 +456,52 @@ const FarmerProducts = () => {
         </div>        </div>        )}
 
         {/* Edit modal window */}
-        <div className={showEditModal?'flex w-full h-screen justify-center overflow-y-scroll items-center fixed top-0 left-0 bg-black/50 bg-opacity-50 z-20':'hidden overflow-hidden'}>
-            <div className="flex w-[60%] h-auto border border-gray-300 rounded mt-6 p-6 m-2 flex-col justify-center bg-white">
-                <div className="flex justify-between items-center mb-4">
-                    <h1 className='text-2xl font-bold'>Edit Product</h1>
-                    <button onClick={()=>setShowEditModal(false)} className='text-gray-500 hover:text-gray-700'>
-                        <i className='bi bi-x-lg text-xl'></i>
-                    </button>
+        <div className={showEditModal?'flex w-full h-screen justify-center overflow-y-auto items-center fixed top-0 left-0 bg-black/60 backdrop-blur-sm z-50 animate-fadeIn':'hidden overflow-hidden'}>
+            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl mx-4 my-8 animate-slideUp">
+                <div className="bg-gradient-to-r from-[#78C726] to-[#5fa51f] p-6 rounded-t-2xl">
+                    <div className="flex justify-between items-center">
+                        <h2 className='text-2xl font-bold text-white flex items-center gap-2'>
+                            <i className='bi bi-pencil-square'></i>
+                            Edit Product
+                        </h2>
+                        <button onClick={()=>setShowEditModal(false)} className='text-white hover:bg-white/20 rounded-full p-2 transition-all'>
+                            <i className='bi bi-x-lg text-xl'></i>
+                        </button>
+                    </div>
+                    <p className="text-white/90 mt-2">Make changes to the product details</p>
                 </div>
-                <form onSubmit={handleUpdateProduct} className="flex flex-col gap-4">
+                <form onSubmit={handleUpdateProduct} className="p-6 space-y-4">
                     <div>
-                        <label htmlFor="name" className="block font-semibold mb-2">Product Name</label>
+                        <label htmlFor="name" className='block text-sm font-semibold text-gray-700 mb-2'>Product Name *</label>
                         <input 
                             type="text" 
                             name="name" 
                             value={formData.name}
                             onChange={handleInputChange}
-                            placeholder='Product name' 
-                            className='w-full p-2 border border-gray-300 rounded' 
+                            placeholder='Enter product name' 
+                            className='w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-[#78C726] focus:outline-none transition-all' 
                             required
                         />
                     </div>
                     <div>
-                        <label htmlFor="description" className="block font-semibold mb-2">Description</label>
+                        <label htmlFor="description" className='block text-sm font-semibold text-gray-700 mb-2'>Description</label>
                         <textarea 
                             name="description" 
                             value={formData.description}
                             onChange={handleInputChange}
-                            className='w-full h-[100px] p-2 border border-gray-300 rounded'
+                            placeholder='Enter product description'
+                            className='w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-[#78C726] focus:outline-none transition-all resize-none'
+                            rows={4}
                         ></textarea>
                     </div>
-                    <div className="flex gap-4">
-                        <div className='flex-1'>
-                            <label htmlFor="category_id" className="block font-semibold mb-2">Category</label>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label htmlFor="category_id" className='block text-sm font-semibold text-gray-700 mb-2'>Category *</label>
                             <select
                                 name="category_id"
                                 value={formData.category_id}
                                 onChange={handleInputChange}
-                                className='w-full p-2 border border-gray-300 rounded'
+                                className='w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-[#78C726] focus:outline-none transition-all'
                                 required
                             >
                                 <option value="">Select Category</option>
@@ -417,51 +510,120 @@ const FarmerProducts = () => {
                                 ))}
                             </select>
                         </div>
-                        <div className='flex-1'>
-                            <label htmlFor="price" className="block font-semibold mb-2">Price ($)</label>
+                        <div>
+                            <label htmlFor="price" className='block text-sm font-semibold text-gray-700 mb-2'>Price *</label>
                             <input 
                                 type="number" 
                                 step="0.01"
                                 name="price" 
                                 value={formData.price}
                                 onChange={handleInputChange}
-                                placeholder='Price' 
-                                className='w-full p-2 border border-gray-300 rounded'
+                                placeholder='0.00' 
+                                className='w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-[#78C726] focus:outline-none transition-all'
                                 required
                             />
                         </div>
                     </div>
-                    <div className="flex gap-4">
-                        <div className='flex-1'>
-                            <label htmlFor="quantity" className="block font-semibold mb-2">Quantity</label>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label htmlFor="quantity" className='block text-sm font-semibold text-gray-700 mb-2'>Quantity *</label>
                             <input 
                                 type="number" 
                                 name="quantity" 
                                 value={formData.quantity}
                                 onChange={handleInputChange}
-                                placeholder='Quantity' 
-                                className='w-full p-2 border border-gray-300 rounded'
+                                placeholder='Enter quantity' 
+                                className='w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-[#78C726] focus:outline-none transition-all'
                                 required
                             />
                         </div>
-                        <div className='flex-1'>
-                            <label htmlFor="location" className="block font-semibold mb-2">Location</label>
+                        <div>
+                            <label htmlFor="location" className='block text-sm font-semibold text-gray-700 mb-2'>Location</label>
                             <input 
                                 type="text" 
                                 name="location" 
                                 value={formData.location}
                                 onChange={handleInputChange}
-                                placeholder='Location' 
-                                className='w-full p-2 border border-gray-300 rounded'
+                                placeholder='Enter location' 
+                                className='w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-[#78C726] focus:outline-none transition-all'
                             />
                         </div>
                     </div>
-                    <div className="flex gap-2 pt-4">
-                        <button type="button" onClick={()=>setShowEditModal(false)} className='flex-1 border border-[#78C726] text-[#78C726] rounded p-2 hover:bg-gray-50 transition-colors'>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label htmlFor="status" className='block text-sm font-semibold text-gray-700 mb-2'>Status</label>
+                            <select 
+                                name="status" 
+                                value={formData.status}
+                                onChange={handleInputChange}
+                                className='w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-[#78C726] focus:outline-none transition-all'
+                            >
+                                <option value="ACTIF">Active</option>
+                                <option value="INACTIF">Inactive</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div>
+                        <label htmlFor="image" className='block text-sm font-semibold text-gray-700 mb-2'>Product Image</label>
+                        <div className="space-y-3">
+                            {(imagePreview || formData.image) && (
+                                <div className="relative w-32 h-32 mx-auto">
+                                    <img 
+                                        src={imagePreview || formData.image} 
+                                        alt="Preview" 
+                                        className="w-full h-full object-cover rounded-xl border-2 border-[#78C726]" 
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={() => { setImageFile(null); setImagePreview(''); setFormData({...formData, image: ''}); }}
+                                        className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center hover:bg-red-600"
+                                    >
+                                        <i className="bi bi-x text-sm"></i>
+                                    </button>
+                                </div>
+                            )}
+                            <div className="flex gap-2">
+                                <label className="flex-1 cursor-pointer">
+                                    <div className="border-2 border-dashed border-gray-300 rounded-xl p-4 text-center hover:border-[#78C726] transition-all">
+                                        <i className="bi bi-cloud-upload text-2xl text-gray-400"></i>
+                                        <p className="text-sm text-gray-600 mt-2">Click to upload new image</p>
+                                        <p className="text-xs text-gray-400">PNG, JPG up to 5MB</p>
+                                    </div>
+                                    <input 
+                                        type="file" 
+                                        accept="image/*"
+                                        onChange={handleImageChange}
+                                        className="hidden"
+                                    />
+                                </label>
+                            </div>
+                            <div className="text-center text-sm text-gray-500">OR</div>
+                            <input 
+                                type="text" 
+                                name="image" 
+                                value={formData.image}
+                                onChange={handleInputChange}
+                                placeholder='Enter image URL' 
+                                className='w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-[#78C726] focus:outline-none transition-all'
+                            />
+                        </div>
+                    </div>
+                    <div className="flex gap-3 pt-4">
+                        <button 
+                            type="button" 
+                            onClick={()=> { setShowEditModal(false); resetForm(); }} 
+                            className='flex-1 border-2 border-gray-300 text-gray-700 rounded-xl px-6 py-3 hover:bg-gray-100 transition-all font-semibold'
+                        >
+                            <i className='bi bi-x-circle mr-2'></i>
                             Cancel
                         </button>
-                        <button type="submit" className='flex-1 bg-[#78C726] text-white rounded p-2 hover:bg-[#6ab31f] transition-colors'>
-                            Save Changes
+                        <button 
+                            type="submit"
+                            disabled={uploading}
+                            className='flex-1 bg-[#78C726] text-white rounded-xl px-6 py-3 hover:bg-[#5fa51f] transition-all font-semibold shadow-lg disabled:bg-gray-400'
+                        >
+                            <i className={`bi ${uploading ? 'bi-hourglass-split' : 'bi-check-circle'} mr-2`}></i>
+                            {uploading ? 'Uploading...' : 'Update Product'}
                         </button>
                     </div>
                 </form>
@@ -469,93 +631,117 @@ const FarmerProducts = () => {
         </div>
 
         {/* View modal window */}
-        <div className={showViewModal?'flex w-full h-screen justify-center overflow-y-scroll items-center fixed top-0 left-0 bg-black/50 bg-opacity-50 z-20':'hidden overflow-hidden'}>
-            <div className="flex w-[60%] h-auto border border-gray-300 rounded mt-6 p-6 m-2 flex-col bg-white">
-                <div className="flex justify-between items-center mb-4">
-                    <h1 className='text-2xl font-bold'>Product Details</h1>
-                    <button onClick={()=>setShowViewModal(false)} className='text-gray-500 hover:text-gray-700'>
-                        <i className='bi bi-x-lg text-xl'></i>
-                    </button>
-                </div>
-                {selectedProduct && (
-                    <div className="space-y-4">
-                        <div className="grid grid-cols-2 gap-4">
-                            <div>
-                                <p className="text-sm text-gray-500 font-semibold">Product Name</p>
-                                <p className="text-lg">{selectedProduct.name}</p>
-                            </div>
-                            <div>
-                                <p className="text-sm text-gray-500 font-semibold">Category</p>
-                                <p className="text-lg">{selectedProduct.category?.name || 'N/A'}</p>
-                            </div>
-                            <div>
-                                <p className="text-sm text-gray-500 font-semibold">Price</p>
-                                <p className="text-lg">${selectedProduct.price}</p>
-                            </div>
-                            <div>
-                                <p className="text-sm text-gray-500 font-semibold">Quantity</p>
-                                <p className="text-lg">{selectedProduct.quantity}</p>
-                            </div>
-                            <div>
-                                <p className="text-sm text-gray-500 font-semibold">Location</p>
-                                <p className="text-lg">{selectedProduct.location || 'N/A'}</p>
-                            </div>
-                            <div>
-                                <p className="text-sm text-gray-500 font-semibold">Status</p>
-                                <p className="text-lg">{selectedProduct.status}</p>
-                            </div>
-                            <div className="col-span-2">
-                                <p className="text-sm text-gray-500 font-semibold">Description</p>
-                                <p className="text-lg">{selectedProduct.description || 'No description'}</p>
-                            </div>
-                        </div>
-                        <button onClick={()=>setShowViewModal(false)} className='bg-[#78C726] text-white rounded p-2 mt-4 w-full hover:bg-[#6ab31f] transition-colors'>
-                            Close
+        <div className={showViewModal?'flex w-full h-screen justify-center overflow-y-auto items-center fixed top-0 left-0 bg-black/60 backdrop-blur-sm z-50 animate-fadeIn':'hidden overflow-hidden'}>
+            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl mx-4 my-8 animate-slideUp">
+                <div className="bg-gradient-to-r from-blue-500 to-blue-600 p-6 rounded-t-2xl">
+                    <div className="flex justify-between items-center">
+                        <h2 className='text-2xl font-bold text-white flex items-center gap-2'>
+                            <i className='bi bi-eye'></i>
+                            Product Details
+                        </h2>
+                        <button onClick={()=>setShowViewModal(false)} className='text-white hover:bg-white/20 rounded-full p-2 transition-all'>
+                            <i className='bi bi-x-lg text-xl'></i>
                         </button>
                     </div>
+                </div>
+                {selectedProduct && (
+                    <div className="p-6 space-y-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="bg-gray-50 p-4 rounded-xl">
+                                <label className="text-sm font-semibold text-gray-500 uppercase tracking-wide">Product Name</label>
+                                <p className='text-gray-800 font-medium mt-1'>{selectedProduct.name}</p>
+                            </div>
+                            <div className="bg-gray-50 p-4 rounded-xl">
+                                <label className="text-sm font-semibold text-gray-500 uppercase tracking-wide">Category</label>
+                                <p className='text-gray-800 font-medium mt-1'>{selectedProduct.category?.name || 'N/A'}</p>
+                            </div>
+                            <div className="bg-gray-50 p-4 rounded-xl">
+                                <label className="text-sm font-semibold text-gray-500 uppercase tracking-wide">Price</label>
+                                <p className='text-green-600 font-bold text-lg mt-1'>${selectedProduct.price || '0.00'}</p>
+                            </div>
+                            <div className="bg-gray-50 p-4 rounded-xl">
+                                <label className="text-sm font-semibold text-gray-500 uppercase tracking-wide">Quantity</label>
+                                <p className='text-gray-800 font-medium mt-1'>{selectedProduct.quantity || 'N/A'}</p>
+                            </div>
+                            <div className="bg-gray-50 p-4 rounded-xl">
+                                <label className="text-sm font-semibold text-gray-500 uppercase tracking-wide">Location</label>
+                                <p className='text-gray-800 font-medium mt-1'>{selectedProduct.location || 'N/A'}</p>
+                            </div>
+                            <div className="bg-gray-50 p-4 rounded-xl">
+                                <label className="text-sm font-semibold text-gray-500 uppercase tracking-wide">Status</label>
+                                <p className='mt-1'>
+                                    <span className={`px-3 py-1 rounded-full text-sm font-semibold ${
+                                        selectedProduct.status === 'ACTIF' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
+                                    }`}>
+                                        {selectedProduct.status || 'N/A'}
+                                    </span>
+                                </p>
+                            </div>
+                        </div>
+                        <div className="bg-gray-50 p-4 rounded-xl md:col-span-2">
+                            <label className="text-sm font-semibold text-gray-500 uppercase tracking-wide">Description</label>
+                            <p className='text-gray-800 mt-2 leading-relaxed'>{selectedProduct.description || 'No description'}</p>
+                        </div>
+                    </div>
                 )}
+                <div className="p-6 bg-gray-50 rounded-b-2xl">
+                    <button 
+                        onClick={()=>setShowViewModal(false)} 
+                        className='w-full bg-gray-600 text-white rounded-xl px-6 py-3 hover:bg-gray-700 transition-all font-semibold shadow-lg'
+                    >
+                        <i className='bi bi-x-circle mr-2'></i>
+                        Close
+                    </button>
+                </div>
             </div>
         </div>
         
         {/* Add product modal window */}
-        <div className={showAddModal?'flex w-full h-screen justify-center overflow-y-scroll items-center fixed top-0 left-0 bg-black/50 bg-opacity-50 z-20':'hidden overflow-hidden'}>
-            <div className="flex w-[60%] h-auto border border-gray-300 rounded mt-6 p-6 m-2 flex-col justify-center bg-white">
-                <div className="flex justify-between items-center mb-4">
-                    <h1 className='text-2xl font-bold'>Add New Product</h1>
-                    <button onClick={()=>setShowAddModal(false)} className='text-gray-500 hover:text-gray-700'>
-                        <i className='bi bi-x-lg text-xl'></i>
-                    </button>
+        <div className={showAddModal?'flex w-full h-screen justify-center overflow-y-auto items-center fixed top-0 left-0 bg-black/60 backdrop-blur-sm z-50 animate-fadeIn':'hidden overflow-hidden'}>
+            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl mx-4 my-8 animate-slideUp">
+                <div className="bg-gradient-to-r from-[#78C726] to-[#5fa51f] p-6 rounded-t-2xl">
+                    <div className="flex justify-between items-center">
+                        <h2 className='text-2xl font-bold text-white flex items-center gap-2'>
+                            <i className='bi bi-plus-circle'></i>
+                            Add New Product
+                        </h2>
+                        <button onClick={() => { setShowAddModal(false); resetForm(); }} className='text-white hover:bg-white/20 rounded-full p-2 transition-all'>
+                            <i className='bi bi-x-lg text-xl'></i>
+                        </button>
+                    </div>
                 </div>
-                <form onSubmit={handleAddProduct} className="flex flex-col gap-4">
+                <form onSubmit={handleAddProduct} className="p-6 space-y-4">
                     <div>
-                        <label htmlFor="name" className="block font-semibold mb-2">Product Name</label>
+                        <label htmlFor="name" className='block text-sm font-semibold text-gray-700 mb-2'>Product Name *</label>
                         <input 
                             type="text" 
                             name="name" 
                             value={formData.name}
                             onChange={handleInputChange}
-                            placeholder='Product name' 
-                            className='w-full p-2 border border-gray-300 rounded' 
+                            placeholder='Enter product name' 
+                            className='w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-[#78C726] focus:outline-none transition-all' 
                             required
                         />
                     </div>
                     <div>
-                        <label htmlFor="description" className="block font-semibold mb-2">Description</label>
+                        <label htmlFor="description" className='block text-sm font-semibold text-gray-700 mb-2'>Description</label>
                         <textarea 
                             name="description" 
                             value={formData.description}
                             onChange={handleInputChange}
-                            className='w-full h-[100px] p-2 border border-gray-300 rounded'
+                            placeholder='Enter product description'
+                            className='w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-[#78C726] focus:outline-none transition-all resize-none'
+                            rows={4}
                         ></textarea>
                     </div>
-                    <div className="flex gap-4">
-                        <div className='flex-1'>
-                            <label htmlFor="category_id" className="block font-semibold mb-2">Category</label>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label htmlFor="category_id" className='block text-sm font-semibold text-gray-700 mb-2'>Category *</label>
                             <select
                                 name="category_id"
                                 value={formData.category_id}
                                 onChange={handleInputChange}
-                                className='w-full p-2 border border-gray-300 rounded'
+                                className='w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-[#78C726] focus:outline-none transition-all'
                                 required
                             >
                                 <option value="">Select Category</option>
@@ -564,51 +750,102 @@ const FarmerProducts = () => {
                                 ))}
                             </select>
                         </div>
-                        <div className='flex-1'>
-                            <label htmlFor="price" className="block font-semibold mb-2">Price ($)</label>
+                        <div>
+                            <label htmlFor="price" className='block text-sm font-semibold text-gray-700 mb-2'>Price *</label>
                             <input 
                                 type="number" 
                                 step="0.01"
                                 name="price" 
                                 value={formData.price}
                                 onChange={handleInputChange}
-                                placeholder='Price' 
-                                className='w-full p-2 border border-gray-300 rounded'
+                                placeholder='0.00' 
+                                className='w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-[#78C726] focus:outline-none transition-all'
                                 required
                             />
                         </div>
                     </div>
-                    <div className="flex gap-4">
-                        <div className='flex-1'>
-                            <label htmlFor="quantity" className="block font-semibold mb-2">Quantity</label>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label htmlFor="quantity" className='block text-sm font-semibold text-gray-700 mb-2'>Quantity *</label>
                             <input 
                                 type="number" 
                                 name="quantity" 
                                 value={formData.quantity}
                                 onChange={handleInputChange}
-                                placeholder='Quantity' 
-                                className='w-full p-2 border border-gray-300 rounded'
+                                placeholder='Enter quantity' 
+                                className='w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-[#78C726] focus:outline-none transition-all'
                                 required
                             />
                         </div>
-                        <div className='flex-1'>
-                            <label htmlFor="location" className="block font-semibold mb-2">Location</label>
+                        <div>
+                            <label htmlFor="location" className='block text-sm font-semibold text-gray-700 mb-2'>Location</label>
                             <input 
                                 type="text" 
                                 name="location" 
                                 value={formData.location}
                                 onChange={handleInputChange}
-                                placeholder='Location' 
-                                className='w-full p-2 border border-gray-300 rounded'
+                                placeholder='Enter location' 
+                                className='w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-[#78C726] focus:outline-none transition-all'
                             />
                         </div>
                     </div>
-                    <div className="flex gap-2 pt-4">
-                        <button type="button" onClick={()=>setShowAddModal(false)} className='flex-1 border border-[#78C726] text-[#78C726] rounded p-2 hover:bg-gray-50 transition-colors'>
+                    <div>
+                        <label htmlFor="image" className='block text-sm font-semibold text-gray-700 mb-2'>Product Image</label>
+                        <div className="space-y-3">
+                            {imagePreview && (
+                                <div className="relative w-32 h-32 mx-auto">
+                                    <img src={imagePreview} alt="Preview" className="w-full h-full object-cover rounded-xl border-2 border-[#78C726]" />
+                                    <button
+                                        type="button"
+                                        onClick={() => { setImageFile(null); setImagePreview(''); }}
+                                        className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center hover:bg-red-600"
+                                    >
+                                        <i className="bi bi-x text-sm"></i>
+                                    </button>
+                                </div>
+                            )}
+                            <div className="flex gap-2">
+                                <label className="flex-1 cursor-pointer">
+                                    <div className="border-2 border-dashed border-gray-300 rounded-xl p-4 text-center hover:border-[#78C726] transition-all">
+                                        <i className="bi bi-cloud-upload text-2xl text-gray-400"></i>
+                                        <p className="text-sm text-gray-600 mt-2">Click to upload image</p>
+                                        <p className="text-xs text-gray-400">PNG, JPG up to 5MB</p>
+                                    </div>
+                                    <input 
+                                        type="file" 
+                                        accept="image/*"
+                                        onChange={handleImageChange}
+                                        className="hidden"
+                                    />
+                                </label>
+                            </div>
+                            <div className="text-center text-sm text-gray-500">OR</div>
+                            <input 
+                                type="text" 
+                                name="image" 
+                                value={formData.image}
+                                onChange={handleInputChange}
+                                placeholder='Enter image URL' 
+                                className='w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-[#78C726] focus:outline-none transition-all'
+                            />
+                        </div>
+                    </div>
+                    <div className="flex gap-3 pt-4">
+                        <button 
+                            type="button" 
+                            onClick={() => { setShowAddModal(false); resetForm(); }}
+                            className='flex-1 border-2 border-gray-300 text-gray-700 rounded-xl px-6 py-3 hover:bg-gray-100 transition-all font-semibold'
+                        >
+                            <i className='bi bi-x-circle mr-2'></i>
                             Cancel
                         </button>
-                        <button type="submit" className='flex-1 bg-[#78C726] text-white rounded p-2 hover:bg-[#6ab31f] transition-colors'>
-                            Add Product
+                        <button 
+                            type="submit"
+                            disabled={uploading}
+                            className='flex-1 bg-[#78C726] text-white rounded-xl px-6 py-3 hover:bg-[#5fa51f] transition-all font-semibold shadow-lg disabled:bg-gray-400'
+                        >
+                            <i className={`bi ${uploading ? 'bi-hourglass-split' : 'bi-plus-circle'} mr-2`}></i>
+                            {uploading ? 'Uploading...' : 'Add Product'}
                         </button>
                     </div>
                 </form>
@@ -616,13 +853,41 @@ const FarmerProducts = () => {
         </div>
 
         {/* Delete modal window */}
-        <div className={deleteModal?'flex w-full h-screen justify-center overflow-hidden items-center fixed top-0 left-0 bg-black/50 bg-opacity-50 z-20':'hidden overflow-hidden'}>
-            <div className="flex w-[40%] z-50 h-auto border border-gray-300 rounded p-4 m-2 flex-col justify-center bg-white">
-                <h1 className='text-2xl font-bold'>Delete Product?</h1>
-                <p>This will permanently delete "{selectedProduct?.name || 'this product'}". This action cannot be undone.</p>
-                <div className="flex gap-2 mt-4">
-                    <button onClick={()=>setDeleteModal(false)} className='flex-1 border border-[#78C726] text-[#78C726] rounded p-2'>Cancel</button>
-                    <button onClick={handleDelete} className='flex-1 bg-[#DF6B57] text-white rounded p-2'>Delete</button>
+        <div className={deleteModal?'flex w-full h-screen justify-center overflow-hidden items-center fixed top-0 left-0 bg-black/60 backdrop-blur-sm z-50 animate-fadeIn':'hidden overflow-hidden'}>
+            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md mx-4 animate-slideUp">
+                <div className="bg-gradient-to-r from-red-500 to-red-600 p-6 rounded-t-2xl">
+                    <div className="flex justify-between items-center">
+                        <h2 className='text-2xl font-bold text-white flex items-center gap-2'>
+                            <i className='bi bi-exclamation-triangle'></i>
+                            Delete Product
+                        </h2>
+                        <button onClick={()=>setDeleteModal(false)} className='text-white hover:bg-white/20 rounded-full p-2 transition-all'>
+                            <i className='bi bi-x-lg text-xl'></i>
+                        </button>
+                    </div>
+                </div>
+                <div className="p-6">
+                    <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded-lg mb-4">
+                        <p className="text-gray-800 font-semibold mb-2">Are you sure you want to delete this product?</p>
+                        <p className="text-gray-600 text-sm">Product: <span className="font-semibold text-red-600">"{selectedProduct?.name || 'this product'}"</span></p>
+                        <p className="text-gray-600 text-sm mt-2">This action cannot be undone.</p>
+                    </div>
+                </div>
+                <div className="flex gap-3 p-6 bg-gray-50 rounded-b-2xl">
+                    <button 
+                        onClick={()=>setDeleteModal(false)} 
+                        className='flex-1 border-2 border-gray-300 text-gray-700 rounded-xl px-6 py-3 hover:bg-gray-100 transition-all font-semibold'
+                    >
+                        <i className='bi bi-x-circle mr-2'></i>
+                        Cancel
+                    </button>
+                    <button 
+                        onClick={handleDelete} 
+                        className='flex-1 bg-red-500 text-white rounded-xl px-6 py-3 hover:bg-red-600 transition-all font-semibold shadow-lg'
+                    >
+                        <i className='bi bi-trash mr-2'></i>
+                        Delete
+                    </button>
                 </div>
             </div>
         </div>

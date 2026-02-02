@@ -249,7 +249,18 @@ const User = () => {
                                     <tr key={user.id} className={`hover:bg-[#E6F2D9] transition-all ${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}`}>
                                         <td className='p-4'>
                                             <div className="flex items-center gap-3">
-                                                <div className='w-10 h-10 bg-[#E6F2D9] rounded-full flex items-center justify-center'>
+                                                {user.profileimg ? (
+                                                    <img 
+                                                        src={user.profileimg.startsWith('http') ? user.profileimg : `http://localhost:5000${user.profileimg}`} 
+                                                        alt={user.name}
+                                                        className='w-10 h-10 rounded-full object-cover border-2 border-[#78C726]'
+                                                        onError={(e) => {
+                                                            e.currentTarget.style.display = 'none';
+                                                            e.currentTarget.nextElementSibling?.classList.remove('hidden');
+                                                        }}
+                                                    />
+                                                ) : null}
+                                                <div className={`w-10 h-10 bg-[#E6F2D9] rounded-full flex items-center justify-center ${user.profileimg ? 'hidden' : ''}`}>
                                                     <i className='bi bi-person text-[#78C726]'></i>
                                                 </div>
                                                 <div>
@@ -324,115 +335,128 @@ const User = () => {
         )}
 
         {/* View User Modal */}
-        <div className={viewModal?'flex w-full h-screen justify-center overflow-hidden items-center fixed top-0 left-0 bg-black/50 bg-opacity-50 z-20':'hidden overflow-hidden'}>
-            <div className="flex w-[50%] z-50 h-auto border border-gray-300 rounded-lg p-6 m-2 flex-col bg-white">
-                <div className="flex justify-between items-center mb-4">
-                    <h1 className='text-2xl font-bold'>User Details</h1>
-                    <button onClick={() => { setViewModal(false); setSelectedUser(null); }} className='text-gray-500 hover:text-gray-700'>
-                        <i className='bi bi-x-lg text-xl'></i>
-                    </button>
-                </div>
-                {selectedUser && (
-                    <div className="space-y-4">
-                        <div className="grid grid-cols-2 gap-4">
-                            <div>
-                                <p className="text-sm text-gray-500 font-semibold">Name</p>
-                                <p className="text-lg">{selectedUser.name || 'N/A'}</p>
-                            </div>
-                            <div>
-                                <p className="text-sm text-gray-500 font-semibold">Email</p>
-                                <p className="text-lg">{selectedUser.email || 'N/A'}</p>
-                            </div>
-                            <div>
-                                <p className="text-sm text-gray-500 font-semibold">Phone</p>
-                                <p className="text-lg">{selectedUser.phone || 'N/A'}</p>
-                            </div>
-                            <div>
-                                <p className="text-sm text-gray-500 font-semibold">Role</p>
-                                <p className="text-lg capitalize">{selectedUser.account_type || 'N/A'}</p>
-                            </div>
-                            <div>
-                                <p className="text-sm text-gray-500 font-semibold">Address</p>
-                                <p className="text-lg">{selectedUser.address || 'N/A'}</p>
-                            </div>
-                            <div>
-                                <p className="text-sm text-gray-500 font-semibold">Total Orders</p>
-                                <p className="text-lg">{selectedUser.ordersCount || 0}</p>
-                            </div>
-                            <div>
-                                <p className="text-sm text-gray-500 font-semibold">Joined Date</p>
-                                <p className="text-lg">{selectedUser.createdAt ? new Date(selectedUser.createdAt).toLocaleDateString() : 'N/A'}</p>
-                            </div>
-                            <div>
-                                <p className="text-sm text-gray-500 font-semibold">User ID</p>
-                                <p className="text-lg">{selectedUser.id}</p>
-                            </div>
-                        </div>
-                        <button onClick={() => { setViewModal(false); setSelectedUser(null); }} className='bg-[#78C726] text-white rounded p-2 mt-4 w-full hover:bg-[#6ab31f] transition-colors'>
-                            Close
+        <div className={viewModal?'flex w-full h-screen justify-center overflow-y-auto items-center fixed top-0 left-0 bg-black/60 backdrop-blur-sm z-50 animate-fadeIn':'hidden overflow-hidden'}>
+            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl mx-4 my-8 animate-slideUp">
+                <div className="bg-gradient-to-r from-blue-500 to-blue-600 p-6 rounded-t-2xl">
+                    <div className="flex justify-between items-center">
+                        <h2 className='text-2xl font-bold text-white flex items-center gap-2'>
+                            <i className='bi bi-eye'></i>
+                            User Details
+                        </h2>
+                        <button onClick={() => { setViewModal(false); setSelectedUser(null); }} className='text-white hover:bg-white/20 rounded-full p-2 transition-all'>
+                            <i className='bi bi-x-lg text-xl'></i>
                         </button>
                     </div>
+                </div>
+                {selectedUser && (
+                    <div className="p-6">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="bg-gray-50 p-4 rounded-xl">
+                                <label className="text-sm font-semibold text-gray-500 uppercase tracking-wide">Name</label>
+                                <p className='text-gray-800 font-medium mt-1'>{selectedUser.name || 'N/A'}</p>
+                            </div>
+                            <div className="bg-gray-50 p-4 rounded-xl">
+                                <label className="text-sm font-semibold text-gray-500 uppercase tracking-wide">Email</label>
+                                <p className='text-gray-800 font-medium mt-1'>{selectedUser.email || 'N/A'}</p>
+                            </div>
+                            <div className="bg-gray-50 p-4 rounded-xl">
+                                <label className="text-sm font-semibold text-gray-500 uppercase tracking-wide">Phone</label>
+                                <p className='text-gray-800 font-medium mt-1'>{selectedUser.phone || 'N/A'}</p>
+                            </div>
+                            <div className="bg-gray-50 p-4 rounded-xl">
+                                <label className="text-sm font-semibold text-gray-500 uppercase tracking-wide">Role</label>
+                                <p className='text-gray-800 font-medium mt-1 capitalize'>{selectedUser.account_type || 'N/A'}</p>
+                            </div>
+                            <div className="bg-gray-50 p-4 rounded-xl md:col-span-2">
+                                <label className="text-sm font-semibold text-gray-500 uppercase tracking-wide">Address</label>
+                                <p className='text-gray-800 font-medium mt-1'>{selectedUser.address || 'N/A'}</p>
+                            </div>
+                            <div className="bg-gray-50 p-4 rounded-xl">
+                                <label className="text-sm font-semibold text-gray-500 uppercase tracking-wide">Total Orders</label>
+                                <p className='text-gray-800 font-medium mt-1'>{selectedUser.ordersCount || 0}</p>
+                            </div>
+                            <div className="bg-gray-50 p-4 rounded-xl">
+                                <label className="text-sm font-semibold text-gray-500 uppercase tracking-wide">Joined Date</label>
+                                <p className='text-gray-800 font-medium mt-1'>{selectedUser.createdAt ? new Date(selectedUser.createdAt).toLocaleDateString() : 'N/A'}</p>
+                            </div>
+                            <div className="bg-gray-50 p-4 rounded-xl md:col-span-2">
+                                <label className="text-sm font-semibold text-gray-500 uppercase tracking-wide">User ID</label>
+                                <p className='text-gray-800 font-medium mt-1'>{selectedUser.id}</p>
+                            </div>
+                        </div>
+                    </div>
                 )}
+                <div className="p-6 bg-gray-50 rounded-b-2xl">
+                    <button onClick={() => { setViewModal(false); setSelectedUser(null); }} className='w-full bg-gray-600 text-white rounded-xl px-6 py-3 hover:bg-gray-700 transition-all font-semibold shadow-lg'>
+                        <i className='bi bi-x-circle mr-2'></i>
+                        Close
+                    </button>
+                </div>
             </div>
         </div>
 
         {/* Edit User Modal */}
-        <div className={editModal?'flex w-full h-screen justify-center overflow-hidden items-center fixed top-0 left-0 bg-black/50 bg-opacity-50 z-20':'hidden overflow-hidden'}>
-            <div className="flex w-[50%] z-50 h-auto border border-gray-300 rounded-lg p-6 m-2 flex-col bg-white max-h-[90vh] overflow-y-auto">
-                <div className="flex justify-between items-center mb-4">
-                    <h1 className='text-2xl font-bold'>Edit User</h1>
-                    <button onClick={() => { setEditModal(false); setSelectedUser(null); }} className='text-gray-500 hover:text-gray-700'>
-                        <i className='bi bi-x-lg text-xl'></i>
-                    </button>
+        <div className={editModal?'flex w-full h-screen justify-center overflow-y-auto items-center fixed top-0 left-0 bg-black/60 backdrop-blur-sm z-50 animate-fadeIn':'hidden overflow-hidden'}>
+            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl mx-4 my-8 animate-slideUp">
+                <div className="bg-gradient-to-r from-[#78C726] to-[#5fa51f] p-6 rounded-t-2xl">
+                    <div className="flex justify-between items-center">
+                        <h2 className='text-2xl font-bold text-white flex items-center gap-2'>
+                            <i className='bi bi-pencil-square'></i>
+                            Edit User
+                        </h2>
+                        <button onClick={() => { setEditModal(false); setSelectedUser(null); }} className='text-white hover:bg-white/20 rounded-full p-2 transition-all'>
+                            <i className='bi bi-x-lg text-xl'></i>
+                        </button>
+                    </div>
                 </div>
-                <div className="space-y-4">
+                <div className="p-6 space-y-4">
                     <div>
-                        <label htmlFor="name" className="block font-semibold mb-2">Name</label>
+                        <label htmlFor="name" className='block text-sm font-semibold text-gray-700 mb-2'>Name</label>
                         <input
                             type="text"
                             name="name"
                             value={editForm.name}
                             onChange={handleInputChange}
-                            className="w-full p-2 border border-gray-300 rounded"
+                            className='w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-[#78C726] focus:outline-none transition-all'
                         />
                     </div>
                     <div>
-                        <label htmlFor="email" className="block font-semibold mb-2">Email</label>
+                        <label htmlFor="email" className='block text-sm font-semibold text-gray-700 mb-2'>Email</label>
                         <input
                             type="email"
                             name="email"
                             value={editForm.email}
                             onChange={handleInputChange}
-                            className="w-full p-2 border border-gray-300 rounded"
+                            className='w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-[#78C726] focus:outline-none transition-all'
                         />
                     </div>
                     <div>
-                        <label htmlFor="phone" className="block font-semibold mb-2">Phone</label>
+                        <label htmlFor="phone" className='block text-sm font-semibold text-gray-700 mb-2'>Phone</label>
                         <input
                             type="text"
                             name="phone"
                             value={editForm.phone}
                             onChange={handleInputChange}
-                            className="w-full p-2 border border-gray-300 rounded"
+                            className='w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-[#78C726] focus:outline-none transition-all'
                         />
                     </div>
                     <div>
-                        <label htmlFor="address" className="block font-semibold mb-2">Address</label>
+                        <label htmlFor="address" className='block text-sm font-semibold text-gray-700 mb-2'>Address</label>
                         <input
                             type="text"
                             name="address"
                             value={editForm.address}
                             onChange={handleInputChange}
-                            className="w-full p-2 border border-gray-300 rounded"
+                            className='w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-[#78C726] focus:outline-none transition-all'
                         />
                     </div>
                     <div>
-                        <label htmlFor="account_type" className="block font-semibold mb-2">Role</label>
+                        <label htmlFor="account_type" className='block text-sm font-semibold text-gray-700 mb-2'>Role</label>
                         <select
                             name="account_type"
                             value={editForm.account_type}
                             onChange={handleInputChange}
-                            className="w-full p-2 border border-gray-300 rounded"
+                            className='w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-[#78C726] focus:outline-none transition-all'
                         >
                             <option value="">Select Role</option>
                             <option value="admin">Admin</option>
@@ -440,11 +464,13 @@ const User = () => {
                             <option value="buyer">Buyer</option>
                         </select>
                     </div>
-                    <div className="flex gap-2 pt-4">
-                        <button onClick={() => { setEditModal(false); setSelectedUser(null); }} className='flex-1 bg-none border border-[#78C726] text-[#78C726] rounded p-2 hover:bg-gray-50 transition-colors'>
+                    <div className="flex gap-3 pt-4">
+                        <button onClick={() => { setEditModal(false); setSelectedUser(null); }} className='flex-1 border-2 border-gray-300 text-gray-700 rounded-xl px-6 py-3 hover:bg-gray-100 transition-all font-semibold'>
+                            <i className='bi bi-x-circle mr-2'></i>
                             Cancel
                         </button>
-                        <button onClick={handleUpdate} className='flex-1 bg-[#78C726] text-white rounded p-2 hover:bg-[#6ab31f] transition-colors'>
+                        <button onClick={handleUpdate} className='flex-1 bg-[#78C726] text-white rounded-xl px-6 py-3 hover:bg-[#5fa51f] transition-all font-semibold shadow-lg'>
+                            <i className='bi bi-check-circle mr-2'></i>
                             Save Changes
                         </button>
                     </div>
@@ -453,13 +479,35 @@ const User = () => {
         </div>
 
         {/* Delete modal window */}
-        <div className={deleteModal?'flex w-full h-screen justify-center overflow-hidden items-center fixed top-0 left-0 bg-black/50 bg-opacity-50 z-20':'hidden overflow-hidden'}>
-            <div className="flex w-[40%] z-50 h-auto border border-gray-300 rounded p-4 m-2 flex-col justify-center bg-white">
-                <h1 className='text-2xl font-bold'>Delete User?</h1>
-                <p>This will permanently delete "{selectedUser?.name || 'this user'}". This action cannot be undone.</p>
-                <div className="flex gap-2 mt-4">
-                    <button onClick={() => { setDeleteModal(false); setSelectedUser(null); }} className='flex-1 bg-none border border-[#78C726] text-[#78C726] rounded p-2'>Cancel</button>
-                    <button onClick={handleDelete} className='flex-1 bg-[#DF6B57] text-white rounded p-2'>Delete</button>
+        <div className={deleteModal?'flex w-full h-screen justify-center overflow-hidden items-center fixed top-0 left-0 bg-black/60 backdrop-blur-sm z-50 animate-fadeIn':'hidden overflow-hidden'}>
+            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md mx-4 animate-slideUp">
+                <div className="bg-gradient-to-r from-red-500 to-red-600 p-6 rounded-t-2xl">
+                    <div className="flex justify-between items-center">
+                        <h2 className='text-2xl font-bold text-white flex items-center gap-2'>
+                            <i className='bi bi-exclamation-triangle'></i>
+                            Delete User
+                        </h2>
+                        <button onClick={() => { setDeleteModal(false); setSelectedUser(null); }} className='text-white hover:bg-white/20 rounded-full p-2 transition-all'>
+                            <i className='bi bi-x-lg text-xl'></i>
+                        </button>
+                    </div>
+                </div>
+                <div className="p-6">
+                    <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded-lg mb-4">
+                        <p className="text-gray-800 font-semibold mb-2">Are you sure you want to delete this user?</p>
+                        <p className="text-gray-600 text-sm">User: <span className="font-semibold text-red-600">"{selectedUser?.name || 'this user'}"</span></p>
+                        <p className="text-gray-600 text-sm mt-2">This action cannot be undone.</p>
+                    </div>
+                </div>
+                <div className="flex gap-3 p-6 bg-gray-50 rounded-b-2xl">
+                    <button onClick={() => { setDeleteModal(false); setSelectedUser(null); }} className='flex-1 border-2 border-gray-300 text-gray-700 rounded-xl px-6 py-3 hover:bg-gray-100 transition-all font-semibold'>
+                        <i className='bi bi-x-circle mr-2'></i>
+                        Cancel
+                    </button>
+                    <button onClick={handleDelete} className='flex-1 bg-red-500 text-white rounded-xl px-6 py-3 hover:bg-red-600 transition-all font-semibold shadow-lg'>
+                        <i className='bi bi-trash mr-2'></i>
+                        Delete
+                    </button>
                 </div>
             </div>
         </div>
