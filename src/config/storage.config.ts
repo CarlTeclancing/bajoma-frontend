@@ -1,7 +1,7 @@
 // Storage configuration for authentication
 // Controls whether tabs share sessions (localStorage) or are isolated (sessionStorage)
 
-const isDevelopment = process.env.NODE_ENV === 'development';
+const isDevelopment = process.env.NODE_ENV === 'production';
 
 // Change this to switch between modes:
 // 'session' = Tab-isolated (each tab can have different user)
