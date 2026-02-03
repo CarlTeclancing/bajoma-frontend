@@ -387,22 +387,30 @@ const FarmerProducts = () => {
                         </td>
                     </tr>
                 ) : (
-                    filteredProducts.map(product => (
+                    filteredProducts.map(product => {
+                        const imageUrl = product.image 
+                            ? (product.image.startsWith('http') ? product.image : `http://localhost:5000${product.image}`)
+                            : null;
+                        console.log('Product:', product.name, 'Image URL:', imageUrl, 'Raw image:', product.image);
+                        
+                        return (
                         <tr key={product.id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
                             <td className='p-4'>
                                 <div className="flex items-center gap-3">
-                                    {product.image ? (
+                                    {imageUrl ? (
                                         <img 
-                                            src={product.image.startsWith('http') ? product.image : `http://localhost:5000${product.image}`} 
+                                            src={imageUrl} 
                                             alt={product.name} 
                                             className='w-12 h-12 object-cover rounded-lg border-2 border-gray-200'
                                             onError={(e) => {
+                                                console.error('Failed to load image:', imageUrl);
                                                 e.currentTarget.style.display = 'none';
-                                                e.currentTarget.nextElementSibling?.classList.remove('hidden');
+                                                const placeholder = e.currentTarget.nextElementSibling as HTMLElement;
+                                                if (placeholder) placeholder.classList.remove('hidden');
                                             }}
                                         />
                                     ) : null}
-                                    <div className={`w-12 h-12 bg-gray-200 rounded-lg flex items-center justify-center ${product.image ? 'hidden' : ''}`}>
+                                    <div className={`w-12 h-12 bg-gray-200 rounded-lg flex items-center justify-center ${imageUrl ? 'hidden' : ''}`}>
                                         <i className='bi bi-image text-gray-400'></i>
                                     </div>
                                     <div>
@@ -449,7 +457,9 @@ const FarmerProducts = () => {
                                 </div>
                             </td>
                         </tr>
-                    ))
+                        );
+                    })
+                )}
                 )}
             </tbody>
         </table>
@@ -646,6 +656,20 @@ const FarmerProducts = () => {
                 </div>
                 {selectedProduct && (
                     <div className="p-6 space-y-4">
+                        {selectedProduct.image && (
+                            <div className="bg-gray-50 p-4 rounded-xl mb-4">
+                                <label className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-2 block">Product Image</label>
+                                <img 
+                                    src={selectedProduct.image.startsWith('http') ? selectedProduct.image : `http://localhost:5000${selectedProduct.image}`}
+                                    alt={selectedProduct.name}
+                                    className="w-full max-h-64 object-contain rounded-lg border-2 border-gray-200"
+                                    onError={(e) => {
+                                        console.error('Failed to load product image in modal:', selectedProduct.image);
+                                        e.currentTarget.style.display = 'none';
+                                    }}
+                                />
+                            </div>
+                        )}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div className="bg-gray-50 p-4 rounded-xl">
                                 <label className="text-sm font-semibold text-gray-500 uppercase tracking-wide">Product Name</label>
