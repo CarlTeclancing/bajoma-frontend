@@ -1,12 +1,11 @@
 import React from 'react'
-import DashboardLayout from '../../components/general/DashboardLayout';
+import FarmerDashboardLayout from '../../components/general/FarmerDashboardLayout';
 import axios from 'axios';
 import { BACKEND_URL } from '../../global';
 import { useFirebaseMessaging } from '../../hooks/useFirebaseMessaging';
 import { formatMessageTime, getInitials, getProfileImageUrl } from '../../utils/message.utils';
-import { authStorage } from '../../config/storage.config';
 
-const Messages = () => {
+const FarmerMessages = () => {
   const [users, setUsers] = React.useState<any[]>([]);
   const [selectedUser, setSelectedUser] = React.useState<any | null>(null);
   const [loading, setLoading] = React.useState(true);
@@ -23,8 +22,7 @@ const Messages = () => {
     unreadCounts, 
     isSending,
     updateTypingStatus,
-    sendMessage,
-    onlineUsers
+    sendMessage
   } = useFirebaseMessaging({
     currentUserId: currentUser?.id || null,
     selectedUserId: selectedUser?.id || null
@@ -32,15 +30,9 @@ const Messages = () => {
 
   React.useEffect(() => {
     fetchUsers();
-    const storedUser = authStorage.getItem('user');
+    const storedUser = localStorage.getItem('user');
     if (storedUser) {
-      try {
-        setCurrentUser(JSON.parse(storedUser));
-        console.log('Current user loaded:', JSON.parse(storedUser));
-      } catch (error) {
-        console.error('Error parsing stored user:', error);
-        authStorage.removeItem('user');
-      }
+      setCurrentUser(JSON.parse(storedUser));
     }
   }, []);
 
@@ -110,7 +102,7 @@ const Messages = () => {
       lg: 'w-14 h-14'
     };
     
-    const profileImageUrl = getProfileImageUrl(user.profileimg);
+    const profileImageUrl = getProfileImageUrl(user.profile_image);
     
     if (profileImageUrl) {
       return (
@@ -140,7 +132,7 @@ const Messages = () => {
   };
 
   return (
-    <DashboardLayout>
+    <FarmerDashboardLayout>
       <div className="flex h-[calc(100vh-140px)] bg-white rounded-lg shadow-sm overflow-hidden">
         {/* Users List Sidebar */}
         <div className="w-80 border-r border-gray-200 flex flex-col bg-white">
@@ -223,12 +215,10 @@ const Messages = () => {
                     <p className="text-xs text-gray-500">{selectedUser.email}</p>
                   )}
                 </div>
-                {onlineUsers.has(selectedUser.id) && (
-                  <span className="text-xs px-3 py-1 rounded-full bg-green-100 text-green-600">
-                    <i className='bi bi-circle-fill text-[6px] mr-1'></i>
-                    Online
-                  </span>
-                )}
+                <span className="text-xs px-3 py-1 rounded-full bg-green-100 text-green-600">
+                  <i className='bi bi-circle-fill text-[6px] mr-1'></i>
+                  Online
+                </span>
               </div>
 
               {/* Messages Area */}
@@ -321,8 +311,8 @@ const Messages = () => {
           )}
         </div>
       </div>
-    </DashboardLayout>
+    </FarmerDashboardLayout>
   )
 }
 
-export default Messages
+export default FarmerMessages

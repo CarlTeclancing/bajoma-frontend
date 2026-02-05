@@ -1,12 +1,24 @@
+    // Handle messaging the seller (placeholder)
+    const handleMessageSeller = (seller: any) => {
+        // You can replace this with a modal or navigation to a messaging page
+        alert(`Start a message to seller: ${seller.name} (ID: ${seller.id})`);
+    };
 import React from 'react';
 import DashboardLayout from '../../components/general/DashboardLayout';
 import axios from 'axios';
 import { BACKEND_URL } from '../../global';
+import useAuth from '../../hooks/auth';
 
 const Orders = () => {
     const [orders, setOrders] = React.useState<any[]>([]);
     const [loading, setLoading] = React.useState(true);
     const [refreshKey, setRefreshKey] = React.useState(0);
+
+    // Get current user using the auth hook
+    const { getCurrentUser } = useAuth();
+    const currentUser = getCurrentUser();
+    const isAdmin = currentUser?.account_type?.toLowerCase() === 'admin';
+    const isBuyer = currentUser?.account_type?.toLowerCase() === 'buyer' || currentUser?.account_type?.toLowerCase() === 'user';
 
     React.useEffect(() => {
         fetchOrders();
@@ -20,7 +32,24 @@ const Orders = () => {
         try {
             const response = await axios.get(`${BACKEND_URL}/orders`);
             const data = Array.isArray(response.data.content) ? response.data.content : [];
-            setOrders(data);
+            
+            console.log('All orders from API:', data);
+            console.log('Current user:', currentUser);
+            console.log('Is buyer:', isBuyer);
+            
+            // For buyers, only show their own orders
+            let filteredOrders = data;
+            if (isBuyer && currentUser && currentUser.id) {
+                console.log('Filtering orders for user_id:', currentUser.id);
+                filteredOrders = data.filter((order: any) => {
+                    console.log(`Order ${order.id}: user_id = ${order.user_id}, matches = ${order.user_id === currentUser.id}`);
+                    return order.user_id === currentUser.id;
+                });
+                console.log('Filtered orders:', filteredOrders);
+            }
+            // Admin sees all orders
+            
+            setOrders(filteredOrders);
             setLoading(false);
         } catch (error) {
             console.error('Error fetching orders:', error);
@@ -94,15 +123,24 @@ const Orders = () => {
         pending: orders.filter(o => o.status?.toLowerCase() === 'pending').length,
         accepted: orders.filter(o => o.status?.toLowerCase() === 'accepted').length,
         delivered: orders.filter(o => o.status?.toLowerCase() === 'delivered').length,
-        cancelled: orders.filter(o => o.status?.toLowerCase() === 'cancelled').length
+        cancelled: orders.filter(o => o.status?.toLowerCase() === 'cancelled').length,
+        totalSpent: orders.reduce((sum, order) => {
+            const price = parseFloat(order.total_price || order.amount || 0);
+            return sum + price;
+        }, 0)
     };
 
     return (
         <DashboardLayout>
             <div className='flex justify-between items-center mb-6'>
                 <div>
-                    <h1 className='text-2xl font-bold'>Order Management</h1>
-                    <p className='text-gray-600'>Manage orders for your products • Auto-refreshes every 30s</p>
+                    <h1 className='text-2xl font-bold'>{isBuyer ? 'My Orders' : 'Order Management'}</h1>
+                    <p className='text-gray-600'>
+                        {isBuyer 
+                            ? 'View your order history and track your purchases' 
+                            : 'Manage orders for your products • Auto-refreshes every 30s'
+                        }
+                    </p>
                 </div>
                 <button 
                     onClick={handleRefresh}
@@ -127,6 +165,22 @@ const Orders = () => {
                         </div>
                     </div>
                 </div>
+                
+                {/* Show Total Spent for Buyers */}
+                {isBuyer && (
+                    <div className="bg-white rounded-2xl p-6 border-2 border-gray-200 hover:border-purple-300 transition-all">
+                        <div className="flex items-center gap-3">
+                            <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
+                                <i className='bi bi-cash-stack text-2xl text-purple-600'></i>
+                            </div>
+                            <div>
+                                <p className='text-sm text-gray-600'>Total Spent</p>
+                                <h2 className='text-xl font-bold text-purple-600'>${stats.totalSpent.toFixed(2)}</h2>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
                 <div className="bg-white rounded-2xl p-6 border-2 border-gray-200 hover:border-amber-300 transition-all">
                     <div className="flex items-center gap-3">
                         <div className="w-12 h-12 bg-amber-100 rounded-lg flex items-center justify-center">
@@ -187,6 +241,7 @@ const Orders = () => {
                                 <tr>
                                     <th className='text-left p-4 font-semibold text-gray-800'>Order ID</th>
                                     <th className='text-left p-4 font-semibold text-gray-800'>Customer</th>
+                                    <th className='text-left p-4 font-semibold text-gray-800'>Seller</th>
                                     <th className='text-left p-4 font-semibold text-gray-800'>Product</th>
                                     <th className='text-center p-4 font-semibold text-gray-800'>Quantity</th>
                                     <th className='text-right p-4 font-semibold text-gray-800'>Total</th>
@@ -202,15 +257,52 @@ const Orders = () => {
                                             <span className='font-semibold text-gray-800'>#{order.id}</span>
                                         </td>
                                         <td className='p-4'>
-                                            <div>
-                                                <p className='font-semibold text-gray-800'>{order.User?.name || order.user?.name || 'N/A'}</p>
-                                                <p className='text-sm text-gray-500'>{order.User?.email || order.user?.email || 'N/A'}</p>
-                                                <p className='text-sm text-gray-500'>{order.User?.phone || order.user?.phone || 'N/A'}</p>
-                                            </div>
+                                            {order.Product?.user ? (
+                                                <div>
+                                                    <p className='font-semibold text-gray-800'>
+                                                        {order.Product.user.name || 'N/A'}
+                                                        <span className='ml-2 text-xs text-gray-500'>ID: {order.Product.user.id}</span>
+                                                    </p>
+                                                    <p className='text-sm text-gray-500'>{order.Product.user.email || ''}</p>
+                                                    {isBuyer && (
+                                                        <button
+                                                            className='mt-2 bg-blue-500 hover:bg-blue-600 text-white rounded px-3 py-1 text-xs font-semibold transition-all'
+                                                            onClick={() => handleMessageSeller(order.Product.user)}
+                                                        >
+                                                            Message Seller
+                                                        </button>
+                                                    )}
+                                                </div>
+                                            ) : (
+                                                <span className='text-gray-400'>N/A</span>
+                                            )}
                                         </td>
                                         <td className='p-4'>
                                             <div className='font-semibold text-gray-700'>{order.Product?.name || order.product?.name || 'N/A'}</div>
                                             <div className='text-sm text-gray-500'>${order.Product?.price || order.product?.price || 0} per unit</div>
+                                        </td>
+                                        {/* Seller Info */}
+                                        <td className='p-4'>
+                                            {order.Product?.user ? (
+                                                <div>
+                                                    <p className='font-semibold text-gray-800'>
+                                                        {order.Product.user.name || 'N/A'}
+                                                        <span className='ml-2 text-xs text-gray-500'>ID: {order.Product.user.id}</span>
+                                                    </p>
+                                                    <p className='text-sm text-gray-500'>{order.Product.user.email || ''}</p>
+                                                    {/* Message Seller Button for buyers only */}
+                                                    {isBuyer && (
+                                                        <button
+                                                            className='mt-2 bg-blue-500 hover:bg-blue-600 text-white rounded px-3 py-1 text-xs font-semibold transition-all'
+                                                            onClick={() => handleMessageSeller(order.Product.user)}
+                                                        >
+                                                            Message Seller
+                                                        </button>
+                                                    )}
+                                                </div>
+                                            ) : (
+                                                <span className='text-gray-400'>N/A</span>
+                                            )}
                                         </td>
                                         <td className='p-4 text-center'>
                                             <span className='bg-[#E6F2D9] px-3 py-1 rounded-full font-semibold text-[#78C726]'>
@@ -231,44 +323,65 @@ const Orders = () => {
                                         </td>
                                         <td className='p-4'>
                                             <div className='flex justify-center gap-2'>
-                                                {order.status?.toLowerCase() === 'pending' && (
+                                                {/* Only show action buttons for admin/farmer, not for buyers */}
+                                                {!isBuyer && (
                                                     <>
-                                                        <button 
-                                                            onClick={() => handleAcceptOrder(order.id)} 
-                                                            className='bg-[#78C726] hover:bg-[#6ab01e] text-white rounded-lg px-3 py-2 text-sm transition-all font-semibold'
-                                                            title="Accept Order"
-                                                        >
-                                                            Accept
-                                                        </button>
-                                                        <button 
-                                                            onClick={() => handleCancelOrder(order.id)} 
-                                                            className='bg-red-500 hover:bg-red-600 text-white rounded-lg p-2 text-sm transition-all'
-                                                            title="Decline Order"
-                                                        >
-                                                            <i className='bi bi-x-lg'></i>
-                                                        </button>
+                                                        {order.status?.toLowerCase() === 'pending' && (
+                                                            <>
+                                                                <button 
+                                                                    onClick={() => handleAcceptOrder(order.id)} 
+                                                                    className='bg-[#78C726] hover:bg-[#6ab01e] text-white rounded-lg px-3 py-2 text-sm transition-all font-semibold'
+                                                                    title="Accept Order"
+                                                                >
+                                                                    Accept
+                                                                </button>
+                                                                <button 
+                                                                    onClick={() => handleCancelOrder(order.id)} 
+                                                                    className='bg-red-500 hover:bg-red-600 text-white rounded-lg p-2 text-sm transition-all'
+                                                                    title="Decline Order"
+                                                                >
+                                                                    <i className='bi bi-x-lg'></i>
+                                                                </button>
+                                                            </>
+                                                        )}
+                                                        {(order.status?.toLowerCase() === 'accepted' || order.status?.toLowerCase() === 'completed') && (
+                                                            <>
+                                                                <button 
+                                                                    onClick={() => handleMarkDelivered(order.id)} 
+                                                                    className='bg-green-500 hover:bg-green-600 text-white rounded-lg px-3 py-2 text-sm transition-all font-semibold'
+                                                                    title="Mark as Delivered"
+                                                                >
+                                                                    Deliver
+                                                                </button>
+                                                                <button 
+                                                                    onClick={() => handleCancelOrder(order.id)} 
+                                                                    className='bg-red-500 hover:bg-red-600 text-white rounded-lg p-2 text-sm transition-all'
+                                                                    title="Cancel Order"
+                                                                >
+                                                                    <i className='bi bi-x-lg'></i>
+                                                                </button>
+                                                            </>
+                                                        )}
+                                                        {order.status?.toLowerCase() === 'delivered' && (
+                                                            <span className='text-green-600 text-sm'>
+                                                                <i className='bi bi-check-circle-fill'></i> Delivered
+                                                            </span>
+                                                        )}
+                                                        {order.status?.toLowerCase() === 'cancelled' && (
+                                                            <span className='text-red-600 text-sm'>
+                                                                <i className='bi bi-x-circle-fill'></i> Cancelled
+                                                            </span>
+                                                        )}
                                                     </>
                                                 )}
-                                                {(order.status?.toLowerCase() === 'accepted' || order.status?.toLowerCase() === 'completed') && (
-                                                    <>
-                                                        <button 
-                                                            onClick={() => handleMarkDelivered(order.id)} 
-                                                            className='bg-green-500 hover:bg-green-600 text-white rounded-lg px-3 py-2 text-sm transition-all font-semibold'
-                                                            title="Mark as Delivered"
-                                                        >
-                                                            Deliver
-                                                        </button>
-                                                        <button 
-                                                            onClick={() => handleCancelOrder(order.id)} 
-                                                            className='bg-red-500 hover:bg-red-600 text-white rounded-lg p-2 text-sm transition-all'
-                                                            title="Cancel Order"
-                                                        >
-                                                            <i className='bi bi-x-lg'></i>
-                                                        </button>
-                                                    </>
-                                                )}
-                                                {(order.status?.toLowerCase() === 'delivered' || order.status?.toLowerCase() === 'cancelled') && (
-                                                    <span className='text-gray-400 text-sm italic'>Completed</span>
+                                                {/* For buyers, show view details or status info */}
+                                                {isBuyer && (
+                                                    <span className='text-gray-600 text-sm'>
+                                                        {order.status?.toLowerCase() === 'pending' && '⏳ Processing...'}
+                                                        {order.status?.toLowerCase() === 'accepted' && '📦 Preparing...'}
+                                                        {order.status?.toLowerCase() === 'delivered' && '✅ Delivered'}
+                                                        {order.status?.toLowerCase() === 'cancelled' && '❌ Cancelled'}
+                                                    </span>
                                                 )}
                                             </div>
                                         </td>

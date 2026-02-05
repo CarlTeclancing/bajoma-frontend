@@ -460,7 +460,6 @@ const FarmerProducts = () => {
                         );
                     })
                 )}
-                )}
             </tbody>
         </table>
         </div>        </div>        )}

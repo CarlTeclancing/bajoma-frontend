@@ -44,12 +44,19 @@ const FarmerOrders = () => {
             const response = await axios.get(`${BACKEND_URL}/orders`);
             const data = Array.isArray(response.data.content) ? response.data.content : [];
             
-            console.log('Fetched farmer orders:', data.length);
-            console.log('Orders data:', data);
-            console.log('First order sample:', data[0]);
+            console.log('Fetched all orders:', data.length);
+            console.log('Current user ID:', currentUser?.id);
             
-            // Backend already filters orders for farmer's products
-            setOrders(data);
+            // Filter orders to show only those for products owned by this farmer
+            const myOrders = data.filter((order: any) => {
+                // Check if the order's product belongs to the current farmer
+                return order.Product && order.Product.user_id === currentUser?.id;
+            });
+            
+            console.log('Filtered farmer orders:', myOrders.length);
+            console.log('Farmer orders:', myOrders);
+            
+            setOrders(myOrders);
             setLoading(false);
         } catch (error) {
             console.error('Error fetching orders:', error);

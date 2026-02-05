@@ -10,6 +10,7 @@ const User = () => {
     const [deleteModal, setDeleteModal] = React.useState(false);
     const [viewModal, setViewModal] = React.useState(false);
     const [editModal, setEditModal] = React.useState(false);
+    const [addModal, setAddModal] = React.useState(false);
     const [selectedUser, setSelectedUser] = React.useState<any | null>(null);
     const [editForm, setEditForm] = React.useState({
         name: '',
@@ -17,6 +18,18 @@ const User = () => {
         phone: '',
         address: '',
         account_type: ''
+    });
+    const [addForm, setAddForm] = React.useState({
+        name: '',
+        email: '',
+        phone: '',
+        address: '',
+        account_type: '',
+        password: ''
+    });
+    const [showQuickStats, setShowQuickStats] = React.useState(() => {
+        const saved = localStorage.getItem('showQuickStats');
+        return saved !== null ? JSON.parse(saved) : true;
     });
 
     React.useEffect(() => {
@@ -86,6 +99,34 @@ const User = () => {
         }
     };
 
+    const handleAddInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+        const { name, value } = e.target;
+        setAddForm(prev => ({ ...prev, [name]: value }));
+    };
+
+    const handleAddUser = async () => {
+        if (!addForm.name || !addForm.email || !addForm.password || !addForm.account_type) {
+            alert('Please fill in all required fields');
+            return;
+        }
+        try {
+            await axios.post(`${BACKEND_URL}/register`, addForm);
+            alert('User added successfully!');
+            setAddModal(false);
+            setAddForm({ name: '', email: '', phone: '', address: '', account_type: '', password: '' });
+            fetchUsers();
+        } catch (error: any) {
+            console.error('Error adding user:', error);
+            alert(error.response?.data?.message || 'Failed to add user');
+        }
+    };
+
+    const toggleQuickStats = () => {
+        const newValue = !showQuickStats;
+        setShowQuickStats(newValue);
+        localStorage.setItem('showQuickStats', JSON.stringify(newValue));
+    };
+
     const filteredUsers = filter === 'all' 
         ? users 
         : filter === 'farmer'
@@ -102,11 +143,36 @@ const User = () => {
     };
 
   return (
-    <DashboardLayout>
-        <h1 className='text-2xl font-bold'>User Management</h1>
-        <p className='text-gray-600'>View and manage all platform users</p>
+    <DashboardLayout
+        showQuickStatsToggle={true}
+        onToggleQuickStats={toggleQuickStats}
+        quickStatsVisible={showQuickStats}
+    >
+        <div className="flex justify-between items-start mb-4">
+            <div>
+                <h1 className='text-2xl font-bold'>User Management</h1>
+                <p className='text-gray-600'>View and manage all platform users</p>
+            </div>
+            <div className="flex gap-3">
+                <button
+                    onClick={toggleQuickStats}
+                    className='bg-gray-100 text-gray-700 rounded-xl px-4 py-2 flex items-center gap-2 hover:bg-gray-200 border-2 border-gray-200 transition-all'
+                >
+                    <i className={`bi bi-${showQuickStats ? 'eye-slash' : 'eye'}`}></i>
+                    {showQuickStats ? 'Hide' : 'Show'} Stats
+                </button>
+                <button
+                    onClick={() => setAddModal(true)}
+                    className='bg-[#78C726] text-white rounded-xl px-6 py-2 flex items-center gap-2 hover:bg-[#5fa51f] transition-all shadow-lg font-semibold'
+                >
+                    <i className='bi bi-plus-circle'></i>
+                    Add User
+                </button>
+            </div>
+        </div>
 
         {/* Stats Cards */}
+        {showQuickStats && (
         <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mt-6'>
             <div className="bg-white rounded-2xl p-6 border-2 border-gray-200 hover:border-[#90C955] transition-all">
                 <div className="flex items-center gap-3">
@@ -156,6 +222,7 @@ const User = () => {
                 </div>
             </div>
         </div>
+        )}
 
         {/* Filter Buttons */}
         <div className="flex flex-wrap gap-3 mt-6">
@@ -508,6 +575,104 @@ const User = () => {
                         <i className='bi bi-trash mr-2'></i>
                         Delete
                     </button>
+                </div>
+            </div>
+        </div>
+
+        {/* Add User Modal */}
+        <div className={addModal?'flex w-full h-screen justify-center overflow-y-auto items-center fixed top-0 left-0 bg-black/60 backdrop-blur-sm z-50 animate-fadeIn':'hidden overflow-hidden'}>
+            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl mx-4 my-8 animate-slideUp">
+                <div className="bg-gradient-to-r from-[#78C726] to-[#5fa51f] p-6 rounded-t-2xl">
+                    <div className="flex justify-between items-center">
+                        <h2 className='text-2xl font-bold text-white flex items-center gap-2'>
+                            <i className='bi bi-person-plus-fill'></i>
+                            Add New User
+                        </h2>
+                        <button onClick={() => { setAddModal(false); setAddForm({ name: '', email: '', phone: '', address: '', account_type: '', password: '' }); }} className='text-white hover:bg-white/20 rounded-full p-2 transition-all'>
+                            <i className='bi bi-x-lg text-xl'></i>
+                        </button>
+                    </div>
+                </div>
+                <div className="p-6 space-y-4">
+                    <div>
+                        <label htmlFor="name" className='block text-sm font-semibold text-gray-700 mb-2'>Name <span className="text-red-500">*</span></label>
+                        <input
+                            type="text"
+                            name="name"
+                            value={addForm.name}
+                            onChange={handleAddInputChange}
+                            className='w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-[#78C726] focus:outline-none transition-all'
+                            placeholder="Enter user's full name"
+                        />
+                    </div>
+                    <div>
+                        <label htmlFor="email" className='block text-sm font-semibold text-gray-700 mb-2'>Email <span className="text-red-500">*</span></label>
+                        <input
+                            type="email"
+                            name="email"
+                            value={addForm.email}
+                            onChange={handleAddInputChange}
+                            className='w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-[#78C726] focus:outline-none transition-all'
+                            placeholder="user@example.com"
+                        />
+                    </div>
+                    <div>
+                        <label htmlFor="password" className='block text-sm font-semibold text-gray-700 mb-2'>Password <span className="text-red-500">*</span></label>
+                        <input
+                            type="password"
+                            name="password"
+                            value={addForm.password}
+                            onChange={handleAddInputChange}
+                            className='w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-[#78C726] focus:outline-none transition-all'
+                            placeholder="Enter a secure password"
+                        />
+                    </div>
+                    <div>
+                        <label htmlFor="phone" className='block text-sm font-semibold text-gray-700 mb-2'>Phone</label>
+                        <input
+                            type="text"
+                            name="phone"
+                            value={addForm.phone}
+                            onChange={handleAddInputChange}
+                            className='w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-[#78C726] focus:outline-none transition-all'
+                            placeholder="+1234567890"
+                        />
+                    </div>
+                    <div>
+                        <label htmlFor="address" className='block text-sm font-semibold text-gray-700 mb-2'>Address</label>
+                        <input
+                            type="text"
+                            name="address"
+                            value={addForm.address}
+                            onChange={handleAddInputChange}
+                            className='w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-[#78C726] focus:outline-none transition-all'
+                            placeholder="Enter user's address"
+                        />
+                    </div>
+                    <div>
+                        <label htmlFor="account_type" className='block text-sm font-semibold text-gray-700 mb-2'>Role <span className="text-red-500">*</span></label>
+                        <select
+                            name="account_type"
+                            value={addForm.account_type}
+                            onChange={handleAddInputChange}
+                            className='w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-[#78C726] focus:outline-none transition-all'
+                        >
+                            <option value="">Select Role</option>
+                            <option value="admin">Admin</option>
+                            <option value="seller">Farmer</option>
+                            <option value="buyer">Buyer</option>
+                        </select>
+                    </div>
+                    <div className="flex gap-3 pt-4">
+                        <button onClick={() => { setAddModal(false); setAddForm({ name: '', email: '', phone: '', address: '', account_type: '', password: '' }); }} className='flex-1 border-2 border-gray-300 text-gray-700 rounded-xl px-6 py-3 hover:bg-gray-100 transition-all font-semibold'>
+                            <i className='bi bi-x-circle mr-2'></i>
+                            Cancel
+                        </button>
+                        <button onClick={handleAddUser} className='flex-1 bg-[#78C726] text-white rounded-xl px-6 py-3 hover:bg-[#5fa51f] transition-all font-semibold shadow-lg'>
+                            <i className='bi bi-check-circle mr-2'></i>
+                            Add User
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
