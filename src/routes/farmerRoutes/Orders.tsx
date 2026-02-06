@@ -44,11 +44,19 @@ const FarmerOrders = () => {
             const response = await axios.get(`${BACKEND_URL}/orders`);
             const data = Array.isArray(response.data.content) ? response.data.content : [];
             
-            console.log('Fetched farmer orders:', data.length);
-            console.log('Orders data:', data);
+            console.log('Fetched all orders:', data.length);
+            console.log('Current user ID:', currentUser?.id);
             
-            // Backend already filters orders for farmer's products
-            setOrders(data);
+            // Filter orders to show only those for products owned by this farmer
+            const myOrders = data.filter((order: any) => {
+                // Check if the order's product belongs to the current farmer
+                return order.Product && order.Product.user_id === currentUser?.id;
+            });
+            
+            console.log('Filtered farmer orders:', myOrders.length);
+            console.log('Farmer orders:', myOrders);
+            
+            setOrders(myOrders);
             setLoading(false);
         } catch (error) {
             console.error('Error fetching orders:', error);
@@ -232,21 +240,26 @@ const FarmerOrders = () => {
                                 </tr>
                             </thead>
                             <tbody>
-                                {orders.map((order, index) => (
+                                {orders.map((order, index) => {
+                                    // Handle both User/user and Product/product naming
+                                    const customer = order.User || order.user;
+                                    const product = order.Product || order.product;
+                                    
+                                    return (
                                     <tr key={order.id} className={`border-t ${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'} hover:bg-[#F5F9F0] transition-all`}>
                                         <td className='p-4'>
                                             <span className='font-semibold text-gray-800'>#{order.id}</span>
                                         </td>
                                         <td className='p-4'>
                                             <div>
-                                                <p className='font-semibold text-gray-800'>{order.User?.name || 'N/A'}</p>
-                                                <p className='text-sm text-gray-500'>{order.User?.email || 'N/A'}</p>
-                                                <p className='text-sm text-gray-500'>{order.User?.phone || 'N/A'}</p>
+                                                <p className='font-semibold text-gray-800'>{customer?.name || 'N/A'}</p>
+                                                <p className='text-sm text-gray-500'>{customer?.email || 'N/A'}</p>
+                                                <p className='text-sm text-gray-500'>{customer?.phone || 'N/A'}</p>
                                             </div>
                                         </td>
                                         <td className='p-4'>
-                                            <div className='font-semibold text-gray-700'>{order.Product?.name || 'N/A'}</div>
-                                            <div className='text-sm text-gray-500'>${order.Product?.price || 0} per unit</div>
+                                            <div className='font-semibold text-gray-700'>{product?.name || 'N/A'}</div>
+                                            <div className='text-sm text-gray-500'>${product?.price || 0} per unit</div>
                                         </td>
                                         <td className='p-4 text-center'>
                                             <span className='bg-[#E6F2D9] px-3 py-1 rounded-full font-semibold text-[#78C726]'>
@@ -309,7 +322,7 @@ const FarmerOrders = () => {
                                             </div>
                                         </td>
                                     </tr>
-                                ))}
+                                )})}
                             </tbody>
                         </table>
                     </div>

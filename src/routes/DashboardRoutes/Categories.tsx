@@ -190,19 +190,61 @@ const Categories = () => {
 
             {/* Add Modal */}
             {showAddModal && (
-                <div className="fixed inset-0 flex items-center justify-center bg-transparent bg-opacity-40 z-50" style={{backdropFilter: 'blur(2px)'}}>
-                    <div className="bg-white p-6 rounded shadow-lg w-[400px]">
-                        <h2 className='text-xl font-bold mb-4'>Add Category</h2>
+                <div className="fixed inset-0 flex items-center justify-center bg-black/60 z-50 backdrop-blur-sm animate-fadeIn">
+                    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md mx-4 animate-slideUp">
+                        <div className="bg-gradient-to-r from-[#78C726] to-[#90C955] p-6 rounded-t-2xl">
+                            <div className="flex justify-between items-center">
+                                <h2 className='text-2xl font-bold text-white flex items-center gap-2'>
+                                    <i className='bi bi-plus-circle'></i>
+                                    Add Category
+                                </h2>
+                                <button onClick={()=>setShowAddModal(false)} type="button" className='text-white hover:bg-white/20 rounded-full p-2 transition-all'>
+                                    <i className='bi bi-x-lg text-xl'></i>
+                                </button>
+                            </div>
+                        </div>
                         <form onSubmit={handleAddCategory}>
-                            <label className='block mb-2'>Name
-                                <input type="text" name="name" value={formData.name} onChange={handleInputChange} className='w-full p-2 border rounded mb-2' required />
-                            </label>
-                            <label className='block mb-2'>Description
-                                <textarea name="description" value={formData.description} onChange={handleInputChange} className='w-full p-2 border rounded mb-2' />
-                            </label>
-                            <div className='flex justify-end gap-2 mt-4'>
-                                <button className='bg-gray-300 text-black rounded p-2' onClick={()=>setShowAddModal(false)} type="button">Cancel</button>
-                                <button className='bg-[#78C726] text-white rounded p-2' type="submit">Add Category</button>
+                            <div className="p-6 space-y-4">
+                                <div>
+                                    <label className='block text-sm font-semibold text-gray-700 mb-2'>Category Name *</label>
+                                    <input 
+                                        type="text" 
+                                        name="name" 
+                                        value={formData.name} 
+                                        onChange={handleInputChange} 
+                                        className='w-full p-3 border-2 border-gray-200 rounded-xl focus:border-[#90C955] focus:outline-none transition-all' 
+                                        placeholder="Enter category name"
+                                        required 
+                                    />
+                                </div>
+                                <div>
+                                    <label className='block text-sm font-semibold text-gray-700 mb-2'>Description (Optional)</label>
+                                    <textarea 
+                                        name="description" 
+                                        value={formData.description} 
+                                        onChange={handleInputChange} 
+                                        className='w-full p-3 border-2 border-gray-200 rounded-xl focus:border-[#90C955] focus:outline-none transition-all resize-none' 
+                                        rows={3}
+                                        placeholder="Add category description..."
+                                    />
+                                </div>
+                            </div>
+                            <div className='flex gap-3 p-6 bg-gray-50 rounded-b-2xl'>
+                                <button 
+                                    type="button"
+                                    onClick={()=>setShowAddModal(false)} 
+                                    className='flex-1 border-2 border-gray-300 text-gray-700 rounded-xl px-6 py-3 hover:bg-gray-100 transition-all font-semibold'
+                                >
+                                    <i className='bi bi-x-circle mr-2'></i>
+                                    Cancel
+                                </button>
+                                <button 
+                                    type="submit"
+                                    className='flex-1 bg-[#78C726] text-white rounded-xl px-6 py-3 hover:bg-[#6ab31f] transition-all font-semibold shadow-lg'
+                                >
+                                    <i className='bi bi-check-circle mr-2'></i>
+                                    Add Category
+                                </button>
                             </div>
                         </form>
                     </div>
@@ -211,19 +253,61 @@ const Categories = () => {
 
             {/* Edit Modal */}
             {showEditModal && (
-                <div className="fixed inset-0 flex items-center justify-center bg-transparent bg-opacity-40 z-50" style={{backdropFilter: 'blur(2px)'}}>
-                    <div className="bg-white p-6 rounded shadow-lg w-[400px]">
-                        <h2 className='text-xl font-bold mb-4'>Edit Category</h2>
+                <div className="fixed inset-0 flex items-center justify-center bg-black/60 z-50 backdrop-blur-sm animate-fadeIn">
+                    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md mx-4 animate-slideUp">
+                        <div className="bg-gradient-to-r from-[#78C726] to-[#90C955] p-6 rounded-t-2xl">
+                            <div className="flex justify-between items-center">
+                                <h2 className='text-2xl font-bold text-white flex items-center gap-2'>
+                                    <i className='bi bi-pencil-square'></i>
+                                    Edit Category
+                                </h2>
+                                <button onClick={()=>setShowEditModal(false)} type="button" className='text-white hover:bg-white/20 rounded-full p-2 transition-all'>
+                                    <i className='bi bi-x-lg text-xl'></i>
+                                </button>
+                            </div>
+                        </div>
                         <form onSubmit={handleUpdateCategory}>
-                            <label className='block mb-2'>Name
-                                <input type="text" name="name" value={formData.name} onChange={handleInputChange} className='w-full p-2 border rounded mb-2' required />
-                            </label>
-                            <label className='block mb-2'>Description
-                                <textarea name="description" value={formData.description} onChange={handleInputChange} className='w-full p-2 border rounded mb-2' />
-                            </label>
-                            <div className='flex justify-end gap-2 mt-4'>
-                                <button className='bg-gray-300 text-black rounded p-2' onClick={()=>setShowEditModal(false)} type="button">Cancel</button>
-                                <button className='bg-[#78C726] text-white rounded p-2' type="submit">Save</button>
+                            <div className="p-6 space-y-4">
+                                <div>
+                                    <label className='block text-sm font-semibold text-gray-700 mb-2'>Category Name *</label>
+                                    <input 
+                                        type="text" 
+                                        name="name" 
+                                        value={formData.name} 
+                                        onChange={handleInputChange} 
+                                        className='w-full p-3 border-2 border-gray-200 rounded-xl focus:border-[#90C955] focus:outline-none transition-all' 
+                                        placeholder="Enter category name"
+                                        required 
+                                    />
+                                </div>
+                                <div>
+                                    <label className='block text-sm font-semibold text-gray-700 mb-2'>Description (Optional)</label>
+                                    <textarea 
+                                        name="description" 
+                                        value={formData.description} 
+                                        onChange={handleInputChange} 
+                                        className='w-full p-3 border-2 border-gray-200 rounded-xl focus:border-[#90C955] focus:outline-none transition-all resize-none' 
+                                        rows={3}
+                                        placeholder="Add category description..."
+                                    />
+                                </div>
+                            </div>
+                            <div className='flex gap-3 p-6 bg-gray-50 rounded-b-2xl'>
+                                <button 
+                                    type="button"
+                                    onClick={()=>setShowEditModal(false)} 
+                                    className='flex-1 border-2 border-gray-300 text-gray-700 rounded-xl px-6 py-3 hover:bg-gray-100 transition-all font-semibold'
+                                >
+                                    <i className='bi bi-x-circle mr-2'></i>
+                                    Cancel
+                                </button>
+                                <button 
+                                    type="submit"
+                                    className='flex-1 bg-[#78C726] text-white rounded-xl px-6 py-3 hover:bg-[#6ab31f] transition-all font-semibold shadow-lg'
+                                >
+                                    <i className='bi bi-check-circle mr-2'></i>
+                                    Save Changes
+                                </button>
                             </div>
                         </form>
                     </div>
@@ -232,13 +316,41 @@ const Categories = () => {
 
             {/* Delete Modal */}
             {deleteModal && (
-                <div className="fixed inset-0 flex items-center justify-center bg-transparent bg-opacity-40 z-50" style={{backdropFilter: 'blur(2px)'}}>
-                    <div className="bg-white p-6 rounded shadow-lg w-[400px]">
-                        <h2 className='text-xl font-bold mb-4'>Delete Category?</h2>
-                        <p>This will permanently delete "{selectedCategory?.name || 'this category'}". This action cannot be undone.</p>
-                        <div className="flex justify-end gap-2 mt-4">
-                            <button className='bg-gray-300 text-black rounded p-2' onClick={() => { setDeleteModal(false); setSelectedCategory(null); }}>Cancel</button>
-                            <button className='bg-[#DF6B57] text-white rounded p-2' onClick={handleDelete}>Delete</button>
+                <div className="fixed inset-0 flex items-center justify-center bg-black/60 z-50 backdrop-blur-sm animate-fadeIn">
+                    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md mx-4 animate-slideUp">
+                        <div className="bg-gradient-to-r from-red-500 to-red-600 p-6 rounded-t-2xl">
+                            <div className="flex justify-between items-center">
+                                <h2 className='text-2xl font-bold text-white flex items-center gap-2'>
+                                    <i className='bi bi-exclamation-triangle'></i>
+                                    Delete Category
+                                </h2>
+                                <button onClick={() => { setDeleteModal(false); setSelectedCategory(null); }} className='text-white hover:bg-white/20 rounded-full p-2 transition-all'>
+                                    <i className='bi bi-x-lg text-xl'></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div className="p-6">
+                            <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded-lg mb-4">
+                                <p className="text-gray-800 font-semibold mb-2">Are you sure you want to delete this category?</p>
+                                <p className="text-gray-600 text-sm">Category: <span className="font-semibold text-red-600">"{selectedCategory?.name || 'this category'}"</span></p>
+                                <p className="text-gray-600 text-sm mt-2">This action cannot be undone.</p>
+                            </div>
+                        </div>
+                        <div className="flex gap-3 p-6 bg-gray-50 rounded-b-2xl">
+                            <button 
+                                onClick={() => { setDeleteModal(false); setSelectedCategory(null); }} 
+                                className='flex-1 border-2 border-gray-300 text-gray-700 rounded-xl px-6 py-3 hover:bg-gray-100 transition-all font-semibold'
+                            >
+                                <i className='bi bi-x-circle mr-2'></i>
+                                Cancel
+                            </button>
+                            <button 
+                                onClick={handleDelete} 
+                                className='flex-1 bg-red-500 text-white rounded-xl px-6 py-3 hover:bg-red-600 transition-all font-semibold shadow-lg'
+                            >
+                                <i className='bi bi-trash mr-2'></i>
+                                Delete
+                            </button>
                         </div>
                     </div>
                 </div>

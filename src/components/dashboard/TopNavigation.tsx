@@ -4,15 +4,33 @@ import { Link } from 'react-router-dom';
 import axios from 'axios';
 import { BACKEND_URL } from '../../global';
 import { useAuth } from '../../hooks/auth';
+import { authStorage } from '../../config/storage.config';
 
-const TopNavigation = () => {
+interface TopNavigationProps {
+    showQuickStatsToggle?: boolean;
+    onToggleQuickStats?: () => void;
+    quickStatsVisible?: boolean;
+}
+
+const TopNavigation = ({ showQuickStatsToggle = false, onToggleQuickStats, quickStatsVisible = true }: TopNavigationProps) => {
     const [menuOpen, setMenuOpen] = React.useState(false);
     const [change, setChange] = React.useState(0);
     const [pendingOrdersCount, setPendingOrdersCount] = React.useState(0);
     const [adminNotificationCount, setAdminNotificationCount] = React.useState(0);
+    const [profileImage, setProfileImage] = React.useState<string>('');
     const { currentUser } = useAuth();
     const location = window.location.pathname;
     const isFarmerDashboard = location.startsWith('/farmer');
+
+    // Load profile image from localStorage
+    React.useEffect(() => {
+        if (currentUser?.profileimg) {
+            const imageUrl = currentUser.profileimg.startsWith('http') 
+                ? currentUser.profileimg 
+                : `http://localhost:5000${currentUser.profileimg}`;
+            setProfileImage(imageUrl);
+        }
+    }, [currentUser]);
 
     // Fetch pending orders count for farmers
     React.useEffect(() => {
@@ -83,11 +101,18 @@ const TopNavigation = () => {
 
     <>
     
-        <div className="hidden md:flex justify-between items-center mb-4 border-b-2 border-gray-300 pb-2">
-            <h1 className='text-2 font-bold'>
-                {isFarmerDashboard ? 'Welcome to BAJOMA Farmers Dashboard' : 'Welcome to BAJOMA Admin Dashboard'}
-            </h1>
-            <div className='flex items-center'>
+        <div className="hidden md:flex justify-end items-center mb-4 border-b-2 border-gray-300 pb-2">
+            <div className='flex items-center gap-3'>
+              {showQuickStatsToggle && onToggleQuickStats && (
+                <button
+                  onClick={onToggleQuickStats}
+                  className='border-2 border-gray-300 text-gray-700 rounded-lg px-3 py-2 hover:bg-gray-100 transition-all flex items-center gap-2'
+                  title={quickStatsVisible ? 'Hide Quick Stats' : 'Show Quick Stats'}
+                >
+                  <i className={`bi bi-${quickStatsVisible ? 'eye-slash' : 'eye'} text-lg`}></i>
+                  <span className='text-sm font-medium'>{quickStatsVisible ? 'Hide' : 'Show'} Stats</span>
+                </button>
+              )}
               <Link to={isFarmerDashboard ? '/farmer/notifications' : '/dashboard/notifications'} className='relative'>
                 <button className='border border-[#90C955] rounded relative'>
                   <i className='bi bi-bell text-2xl text-[#90C955] m-2'></i>
@@ -103,7 +128,7 @@ const TopNavigation = () => {
                   )}
                 </button>
               </Link>
-                <img src={Images.profileimg} alt="profile" className='w-10 h-10 rounded-full ml-4'/>
+                <img src={profileImage || Images.profileimg} alt="profile" className='w-10 h-10 rounded-full ml-4 object-cover border-2 border-[#E6F2D9]'/>
                 <div className='flex flex-col ml-2'>
                     <span className='font-semibold'>{currentUser?.name || 'User'}</span>
                     <span className='text-xs text-gray-500'>{currentUser?.email || ''}</span>
@@ -137,7 +162,7 @@ const TopNavigation = () => {
                   )}
                 </button>
               </Link>
-                <img src={Images.profileimg} alt="profile" className='w-10 h-10 rounded-full ml-4'/>
+                <img src={profileImage || Images.profileimg} alt="profile" className='w-10 h-10 rounded-full ml-4 object-cover border-2 border-[#E6F2D9]'/>
                 <div className='flex flex-col ml-2'>
                     <span className='font-semibold text-sm'>{currentUser?.name || 'User'}</span>
                     <span className='text-xs text-gray-500'>{currentUser?.account_type || ''}</span>

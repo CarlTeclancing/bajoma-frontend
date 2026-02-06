@@ -3,6 +3,9 @@ import { useState, useEffect } from 'react';
 import { Images } from '../../constants/ImgImports';
 import DashboardLayout from '../../components/general/DashboardLayout';
 import { useAuth } from '../../hooks/auth';
+import axios from 'axios';
+import { BACKEND_URL } from '../../global';
+import { authStorage } from '../../config/storage.config';
 
 const Settings = () => {
     const { currentUser } = useAuth();
@@ -11,6 +14,10 @@ const Settings = () => {
         email: '',
         phone: '',
     });
+    const [profileImage, setProfileImage] = useState<string>('');
+    const [imageFile, setImageFile] = useState<File | null>(null);
+    const [imagePreview, setImagePreview] = useState<string>('');
+    const [uploading, setUploading] = useState(false);
 
     useEffect(() => {
         if (currentUser) {
@@ -19,6 +26,13 @@ const Settings = () => {
                 email: currentUser.email || '',
                 phone: currentUser.phone || '',
             });
+            // Construct full URL if profileimg exists and is a relative path
+            const imageUrl = currentUser.profileimg 
+                ? (currentUser.profileimg.startsWith('http') 
+                    ? currentUser.profileimg 
+                    : `http://localhost:5000${currentUser.profileimg}`)
+                : '';
+            setProfileImage(imageUrl);
         }
     }, [currentUser]);
 
@@ -29,11 +43,90 @@ const Settings = () => {
         });
     };
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (file) {
+            // Validate file size (5MB max)
+            if (file.size > 5 * 1024 * 1024) {
+                alert('Image size must be less than 5MB');
+                return;
+            }
+            
+            // Validate file type
+            if (!file.type.startsWith('image/')) {
+                alert('Please select an image file');
+                return;
+            }
+
+            setImageFile(file);
+            
+            // Create preview
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                setImagePreview(reader.result as string);
+            };
+            reader.readAsDataURL(file);
+        }
+    };
+
+    const handleImageUpload = async () => {
+        if (!imageFile) {
+            alert('Please select an image first');
+            return;
+        }
+
+        setUploading(true);
+        const formData = new FormData();
+        formData.append('profileImage', imageFile);
+
+        try {
+            const response = await axios.post(`${BACKEND_URL}/user/upload-profile-image`, formData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data',
+                },
+            });
+
+            // Construct full URL for the uploaded image
+            const imageUrl = response.data.profileimg.startsWith('http') 
+                ? response.data.profileimg 
+                : `http://localhost:5000${response.data.profileimg}`;
+            
+            setProfileImage(imageUrl);
+            setImagePreview('');
+            setImageFile(null);
+            
+            // Update user in localStorage
+            const updatedUser = response.data.user;
+            authStorage.setItem('user', JSON.stringify(updatedUser));
+            
+            alert('Profile image updated successfully!');
+            window.location.reload(); // Reload to show new image
+        } catch (error) {
+            console.error('Image upload error:', error);
+            alert('Failed to upload image. Please try again.');
+        } finally {
+            setUploading(false);
+        }
+    };
+
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        // TODO: Implement API call to update user settings
-        console.log('Update settings:', formData);
-        alert('Settings update functionality coming soon!');
+        
+        try {
+            const response = await axios.put(`${BACKEND_URL}/user/profile`, {
+                name: formData.name,
+                phone: formData.phone,
+            });
+
+            // Update user in localStorage
+            const updatedUser = response.data.user;
+            authStorage.setItem('user', JSON.stringify(updatedUser));
+            
+            alert('Profile updated successfully!');
+        } catch (error) {
+            console.error('Profile update error:', error);
+            alert('Failed to update profile. Please try again.');
+        }
     };
 
     return (
@@ -52,7 +145,59 @@ const Settings = () => {
                 </div>
                 <div className="p-6">
                     <div className="flex flex-col md:flex-row gap-6 items-start mb-6">
-                        <img src={Images.profileimg} className='w-32 h-32 rounded-full object-cover border-4 border-[#E6F2D9]' alt="profile image" />
+                        {/* Profile Image Section */}
+                        <div className="flex flex-col items-center gap-3">
+                            <img 
+                                src={imagePreview || profileImage || Images.profileimg} 
+                                className='w-32 h-32 rounded-full object-cover border-4 border-[#E6F2D9]' 
+                                alt="profile image" 
+                            />
+                            <div className="flex flex-col gap-2 w-full">
+                                <label htmlFor="profile-image-input" className='bg-[#78C726] text-white px-4 py-2 rounded-lg text-sm font-semibold cursor-pointer hover:bg-[#6ab31f] transition-all text-center'>
+                                    <i className='bi bi-camera mr-2'></i>
+                                    Choose Photo
+                                </label>
+                                <input 
+                                    id="profile-image-input"
+                                    type="file" 
+                                    accept="image/*"
+                                    onChange={handleImageChange}
+                                    className="hidden"
+                                />
+                                {imageFile && (
+                                    <button
+                                        onClick={handleImageUpload}
+                                        disabled={uploading}
+                                        className='bg-blue-500 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-blue-600 transition-all disabled:bg-gray-400'
+                                    >
+                                        {uploading ? (
+                                            <>
+                                                <i className='bi bi-hourglass-split animate-spin mr-2'></i>
+                                                Uploading...
+                                            </>
+                                        ) : (
+                                            <>
+                                                <i className='bi bi-upload mr-2'></i>
+                                                Upload
+                                            </>
+                                        )}
+                                    </button>
+                                )}
+                                {imageFile && !uploading && (
+                                    <button
+                                        onClick={() => {
+                                            setImageFile(null);
+                                            setImagePreview('');
+                                        }}
+                                        className='bg-red-500 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-red-600 transition-all'
+                                    >
+                                        <i className='bi bi-x-circle mr-2'></i>
+                                        Cancel
+                                    </button>
+                                )}
+                            </div>
+                        </div>
+                        
                         <div className="flex flex-col flex-1">
                             <h2 className='text-2xl font-bold text-gray-800'>{currentUser?.name || 'User'}</h2>
                             <span className='bg-amber-100 text-amber-700 px-3 py-1 rounded-full text-sm font-semibold mt-2 inline-block w-fit'>

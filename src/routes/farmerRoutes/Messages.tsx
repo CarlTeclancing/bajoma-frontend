@@ -2,30 +2,47 @@ import React from 'react'
 import FarmerDashboardLayout from '../../components/general/FarmerDashboardLayout';
 import axios from 'axios';
 import { BACKEND_URL } from '../../global';
+import { useFirebaseMessaging } from '../../hooks/useFirebaseMessaging';
+import { formatMessageTime, getInitials, getProfileImageUrl } from '../../utils/message.utils';
+import { authStorage } from '../../config/storage.config';
 
 const FarmerMessages = () => {
   const [users, setUsers] = React.useState<any[]>([]);
   const [selectedUser, setSelectedUser] = React.useState<any | null>(null);
-  const [messages, setMessages] = React.useState<any[]>([]);
   const [loading, setLoading] = React.useState(true);
   const [messageText, setMessageText] = React.useState('');
   const [searchTerm, setSearchTerm] = React.useState('');
   const [currentUser, setCurrentUser] = React.useState<any>(null);
   const messagesEndRef = React.useRef<HTMLDivElement>(null);
+  const typingTimeoutRef = React.useRef<any>(null);
+
+  // Use Firebase messaging hook for real-time updates
+  const { 
+    messages, 
+    isOtherUserTyping, 
+    unreadCounts, 
+    isSending,
+    updateTypingStatus,
+    sendMessage,
+    onlineUsers
+  } = useFirebaseMessaging({
+    currentUserId: currentUser?.id || null,
+    selectedUserId: selectedUser?.id || null
+  });
 
   React.useEffect(() => {
     fetchUsers();
-    const storedUser = localStorage.getItem('user');
+    const storedUser = authStorage.getItem('user');
     if (storedUser) {
-      setCurrentUser(JSON.parse(storedUser));
+      try {
+        setCurrentUser(JSON.parse(storedUser));
+        console.log('Current user loaded:', JSON.parse(storedUser));
+      } catch (error) {
+        console.error('Error parsing stored user:', error);
+        authStorage.removeItem('user');
+      }
     }
   }, []);
-
-  React.useEffect(() => {
-    if (selectedUser) {
-      fetchMessages();
-    }
-  }, [selectedUser]);
 
   React.useEffect(() => {
     scrollToBottom();
@@ -48,45 +65,35 @@ const FarmerMessages = () => {
     }
   };
 
-  const fetchMessages = async () => {
-    try {
-      const response = await axios.get(`${BACKEND_URL}/messages`);
-      const allMessages = Array.isArray(response.data.content) ? response.data.content : [];
-      
-      // Filter messages between current user and selected user
-      if (currentUser && selectedUser) {
-        const conversation = allMessages.filter((msg: any) => 
-          (msg.from === currentUser.id && msg.to === selectedUser.id) ||
-          (msg.from === selectedUser.id && msg.to === currentUser.id)
-        );
-        setMessages(conversation);
-      }
-    } catch (error) {
-      console.error('Error fetching messages:', error);
-      setMessages([]);
-    }
-  };
-
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!messageText.trim() || !selectedUser || !currentUser) {
+    if (!messageText.trim() || !selectedUser || !currentUser || isSending) {
       return;
     }
 
-    try {
-      await axios.post(`${BACKEND_URL}/messages`, {
-        from: currentUser.id,
-        to: selectedUser.id,
-        title: '',
-        content: messageText,
-        status: 'ACTIF'
-      });
+    const success = await sendMessage(messageText);
+    if (success) {
       setMessageText('');
-      fetchMessages(); // Refresh messages
-    } catch (error) {
-      console.error('Error sending message:', error);
+    } else {
       alert('Failed to send message');
     }
+  };
+
+  const handleTyping = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setMessageText(e.target.value);
+    
+    // Notify typing status
+    updateTypingStatus(true);
+    
+    // Clear existing timeout
+    if (typingTimeoutRef.current) {
+      clearTimeout(typingTimeoutRef.current);
+    }
+    
+    // Set new timeout to stop typing indicator
+    typingTimeoutRef.current = setTimeout(() => {
+      updateTypingStatus(false);
+    }, 1000);
   };
 
   const filteredUsers = searchTerm
@@ -96,28 +103,48 @@ const FarmerMessages = () => {
       )
     : users;
 
-  const formatTime = (dateString: string) => {
-    const date = new Date(dateString);
-    const today = new Date();
-    const isToday = date.toDateString() === today.toDateString();
+  const renderProfileImage = (user: any, size: 'sm' | 'md' | 'lg' = 'md') => {
+    const sizeClasses = {
+      sm: 'w-10 h-10',
+      md: 'w-12 h-12',
+      lg: 'w-14 h-14'
+    };
     
-    if (isToday) {
-      return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
-    } else {
-      return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) + ' ' + 
-             date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+    const profileImageUrl = getProfileImageUrl(user.profileimg);
+    
+    if (profileImageUrl) {
+      return (
+        <>
+          <img 
+            src={profileImageUrl}
+            alt={user.name}
+            className={`${sizeClasses[size]} rounded-full object-cover border-2 border-gray-200`}
+            onError={(e) => {
+              e.currentTarget.style.display = 'none';
+              const placeholder = e.currentTarget.nextElementSibling as HTMLElement;
+              if (placeholder) placeholder.style.display = 'flex';
+            }}
+          />
+          <div className={`${sizeClasses[size]} rounded-full flex items-center justify-center bg-gray-200 text-gray-600 font-semibold hidden`}>
+            {getInitials(user.name)}
+          </div>
+        </>
+      );
     }
+    
+    return (
+      <div className={`${sizeClasses[size]} rounded-full flex items-center justify-center bg-gray-200 text-gray-600 font-semibold`}>
+        {getInitials(user.name)}
+      </div>
+    );
   };
 
   return (
     <FarmerDashboardLayout>
-      <h1 className='font-bold text-2xl'>Messages</h1>
-      <p>Chat with users</p>
-      
-      <div className="flex gap-0 mt-6 h-[calc(100vh-200px)] border border-gray-200 rounded-lg overflow-hidden">
-        {/* Users List - Chat Sidebar */}
-        <div className="w-80 bg-white border-r border-gray-200 flex flex-col">
-          <div className="p-4 border-b border-gray-200">
+      <div className="flex h-[calc(100vh-140px)] bg-white rounded-lg shadow-sm overflow-hidden">
+        {/* Users List Sidebar */}
+        <div className="w-80 border-r border-gray-200 flex flex-col bg-white">
+          <div className="p-4 border-b border-gray-200 bg-white">
             <h2 className='text-lg font-bold mb-3'>Conversations</h2>
             <input 
               type="text" 
@@ -137,7 +164,9 @@ const FarmerMessages = () => {
               <p className="text-center text-gray-500 py-8 text-sm">No users found</p>
             ) : (
               <div>
-                {filteredUsers.map(user => (
+                {filteredUsers.map(user => {
+                  const userUnreadCount = unreadCounts[user.id] || 0;
+                  return (
                   <div
                     key={user.id}
                     onClick={() => setSelectedUser(user)}
@@ -146,10 +175,13 @@ const FarmerMessages = () => {
                     }`}
                   >
                     <div className="flex items-center gap-3">
-                      <div className={`w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0 ${
-                        selectedUser?.id === user.id ? 'bg-[#78C726] text-white' : 'bg-gray-200 text-gray-600'
-                      }`}>
-                        <i className='bi bi-person text-xl'></i>
+                      <div className="relative">
+                        {renderProfileImage(user, 'md')}
+                        {userUnreadCount > 0 && (
+                          <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold">
+                            {userUnreadCount > 9 ? '9+' : userUnreadCount}
+                          </span>
+                        )}
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="font-semibold text-sm truncate">{user.name}</p>
@@ -162,7 +194,8 @@ const FarmerMessages = () => {
                       )}
                     </div>
                   </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>
@@ -174,17 +207,28 @@ const FarmerMessages = () => {
             <>
               {/* Chat Header */}
               <div className="bg-white p-4 border-b border-gray-200 flex items-center gap-3">
-                <div className="w-10 h-10 bg-[#78C726] rounded-full flex items-center justify-center text-white">
-                  <i className='bi bi-person text-lg'></i>
-                </div>
+                {renderProfileImage(selectedUser, 'md')}
                 <div className="flex-1">
                   <p className="font-semibold">{selectedUser.name}</p>
-                  <p className="text-xs text-gray-500">{selectedUser.email}</p>
+                  {isOtherUserTyping ? (
+                    <p className="text-xs text-[#78C726] flex items-center gap-1">
+                      <span className="animate-pulse">typing</span>
+                      <span className="flex gap-0.5">
+                        <span className="w-1 h-1 bg-[#78C726] rounded-full animate-bounce" style={{animationDelay: '0ms'}}></span>
+                        <span className="w-1 h-1 bg-[#78C726] rounded-full animate-bounce" style={{animationDelay: '150ms'}}></span>
+                        <span className="w-1 h-1 bg-[#78C726] rounded-full animate-bounce" style={{animationDelay: '300ms'}}></span>
+                      </span>
+                    </p>
+                  ) : (
+                    <p className="text-xs text-gray-500">{selectedUser.email}</p>
+                  )}
                 </div>
-                <span className="text-xs px-3 py-1 rounded-full bg-green-100 text-green-600">
-                  <i className='bi bi-circle-fill text-[6px] mr-1'></i>
-                  Online
-                </span>
+                {onlineUsers.has(selectedUser.id) && (
+                  <span className="text-xs px-3 py-1 rounded-full bg-green-100 text-green-600">
+                    <i className='bi bi-circle-fill text-[6px] mr-1'></i>
+                    Online
+                  </span>
+                )}
               </div>
 
               {/* Messages Area */}
@@ -207,9 +251,26 @@ const FarmerMessages = () => {
                           }`}>
                             <p className="text-sm break-words">{msg.content}</p>
                           </div>
-                          <p className={`text-xs text-gray-400 mt-1 px-2 ${isMyMessage ? 'text-right' : 'text-left'}`}>
-                            {formatTime(msg.createdAt)}
-                          </p>
+                          <div className={`flex items-center gap-1 mt-1 px-2 ${isMyMessage ? 'justify-end' : 'justify-start'}`}>
+                            <p className="text-xs text-gray-400">
+                              {formatMessageTime(msg.createdAt || msg.timestamp)}
+                            </p>
+                            {isMyMessage && (
+                              <i className={`bi ${
+                                msg.read 
+                                  ? 'bi-check-all text-blue-500' 
+                                  : msg.delivered 
+                                    ? 'bi-check-all text-gray-400' 
+                                    : 'bi-check text-gray-400'
+                              } text-sm`} title={
+                                msg.read 
+                                  ? 'Read' 
+                                  : msg.delivered 
+                                    ? 'Delivered' 
+                                    : 'Sent'
+                              }></i>
+                            )}
+                          </div>
                         </div>
                       </div>
                     );
@@ -224,17 +285,27 @@ const FarmerMessages = () => {
                   <input
                     type="text"
                     value={messageText}
-                    onChange={(e) => setMessageText(e.target.value)}
+                    onChange={handleTyping}
                     placeholder="Type a message..."
-                    className="flex-1 p-3 border border-gray-300 rounded-full focus:outline-none focus:border-[#78C726] text-sm"
+                    disabled={isSending}
+                    className="flex-1 p-3 border border-gray-300 rounded-full focus:outline-none focus:border-[#78C726] text-sm disabled:bg-gray-100"
                   />
                   <button 
                     type="submit"
-                    disabled={!messageText.trim()}
+                    disabled={!messageText.trim() || isSending}
                     className="bg-[#78C726] text-white px-6 py-3 rounded-full font-semibold hover:bg-[#6ab31f] transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed flex items-center gap-2"
                   >
-                    <i className='bi bi-send'></i>
-                    Send
+                    {isSending ? (
+                      <>
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                        Sending
+                      </>
+                    ) : (
+                      <>
+                        <i className='bi bi-send'></i>
+                        Send
+                      </>
+                    )}
                   </button>
                 </form>
               </div>

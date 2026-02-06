@@ -3,6 +3,7 @@ import HomeLayout from '../../components/general/HomeLayout'
 import { useNavigate } from 'react-router-dom'
 import axios from 'axios'
 import { BACKEND_URL } from '../../global'
+import { authStorage } from '../../config/storage.config'
 
 const Checkout = () => {
   const navigate = useNavigate();
@@ -18,6 +19,28 @@ const Checkout = () => {
     postalCode: '',
     paymentMethod: 'card'
   });
+
+  // Auto-fill user data from database
+  React.useEffect(() => {
+    const userStr = authStorage.getItem('user');
+    if (userStr) {
+      const currentUser = JSON.parse(userStr);
+      const nameParts = currentUser.name ? currentUser.name.split(' ') : ['', ''];
+      const firstName = nameParts[0] || '';
+      const lastName = nameParts.slice(1).join(' ') || '';
+      
+      setFormData(prev => ({
+        ...prev,
+        firstName: firstName,
+        lastName: lastName,
+        email: currentUser.email || '',
+        phone: currentUser.phone || '',
+        address: currentUser.address || '',
+        city: '',
+        postalCode: ''
+      }));
+    }
+  }, []);
 
   React.useEffect(() => {
     const cart = JSON.parse(localStorage.getItem('cart') || '[]');
