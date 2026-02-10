@@ -37,6 +37,18 @@ const Orders = () => {
             console.log('Current user:', currentUser);
             console.log('Is buyer:', isBuyer);
             
+            // Debug: Log the structure of the first order if any exist
+            if (data && data.length > 0) {
+                console.log('First order structure:', JSON.stringify(data[0], null, 2));
+                console.log('First order keys:', Object.keys(data[0]));
+                console.log('First order User:', data[0].User);
+                console.log('First order Product:', data[0].Product);
+                if (data[0].Product) {
+                    console.log('First order Product keys:', Object.keys(data[0].Product));
+                    console.log('First order Product.user:', data[0].Product.user);
+                }
+            }
+            
             // For buyers, only show their own orders
             let filteredOrders = data;
             if (isBuyer && currentUser && currentUser.id) {
@@ -256,53 +268,78 @@ const Orders = () => {
                                         <td className='p-4'>
                                             <span className='font-semibold text-gray-800'>#{order.id}</span>
                                         </td>
+                                        {/* Customer Info */}
                                         <td className='p-4'>
-                                            {order.Product?.user ? (
+                                            <div className='flex items-center gap-2'>
+                                                {(order.User?.profileimg || order.user?.profileimg) && (
+                                                    <img
+                                                        src={
+                                                            (order.User?.profileimg || order.user?.profileimg)?.startsWith('http') 
+                                                                ? (order.User?.profileimg || order.user?.profileimg)
+                                                                : `http://localhost:5000${order.User?.profileimg || order.user?.profileimg}`
+                                                        }
+                                                        alt="Customer"
+                                                        className="w-8 h-8 rounded-full object-cover border"
+                                                        onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                                                    />
+                                                )}
                                                 <div>
                                                     <p className='font-semibold text-gray-800'>
-                                                        {order.Product.user.name || 'N/A'}
-                                                        <span className='ml-2 text-xs text-gray-500'>ID: {order.Product.user.id}</span>
+                                                        {order.User?.name || order.user?.name || order.customer_name || 'Customer'}
+                                                        <span className='ml-2 text-xs text-gray-500'>ID: {order.User?.id || order.user?.id || order.user_id}</span>
                                                     </p>
-                                                    <p className='text-sm text-gray-500'>{order.Product.user.email || ''}</p>
-                                                    {isBuyer && (
-                                                        <button
-                                                            className='mt-2 bg-blue-500 hover:bg-blue-600 text-white rounded px-3 py-1 text-xs font-semibold transition-all'
-                                                            onClick={() => handleMessageSeller(order.Product.user)}
-                                                        >
-                                                            Message Seller
-                                                        </button>
-                                                    )}
+                                                    <p className='text-sm text-gray-500'>{order.User?.email || order.user?.email || ''}</p>
                                                 </div>
-                                            ) : (
-                                                <span className='text-gray-400'>N/A</span>
-                                            )}
-                                        </td>
-                                        <td className='p-4'>
-                                            <div className='font-semibold text-gray-700'>{order.Product?.name || order.product?.name || 'N/A'}</div>
-                                            <div className='text-sm text-gray-500'>${order.Product?.price || order.product?.price || 0} per unit</div>
+                                            </div>
                                         </td>
                                         {/* Seller Info */}
                                         <td className='p-4'>
-                                            {order.Product?.user ? (
+                                            <div className='flex items-center gap-2'>
+                                                {(order.Product?.user?.profileimg || order.product?.user?.profileimg) && (
+                                                    <img
+                                                        src={
+                                                            (order.Product?.user?.profileimg || order.product?.user?.profileimg)?.startsWith('http')
+                                                                ? (order.Product?.user?.profileimg || order.product?.user?.profileimg)
+                                                                : `http://localhost:5000${order.Product?.user?.profileimg || order.product?.user?.profileimg}`
+                                                        }
+                                                        alt="Seller"
+                                                        className="w-8 h-8 rounded-full object-cover border"
+                                                        onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                                                    />
+                                                )}
                                                 <div>
                                                     <p className='font-semibold text-gray-800'>
-                                                        {order.Product.user.name || 'N/A'}
-                                                        <span className='ml-2 text-xs text-gray-500'>ID: {order.Product.user.id}</span>
+                                                        {order.Product?.user?.name || order.product?.user?.name || order.seller_name || 'Seller'}
+                                                        <span className='ml-2 text-xs text-gray-500'>ID: {order.Product?.user?.id || order.product?.user?.id}</span>
                                                     </p>
-                                                    <p className='text-sm text-gray-500'>{order.Product.user.email || ''}</p>
-                                                    {/* Message Seller Button for buyers only */}
-                                                    {isBuyer && (
-                                                        <button
-                                                            className='mt-2 bg-blue-500 hover:bg-blue-600 text-white rounded px-3 py-1 text-xs font-semibold transition-all'
-                                                            onClick={() => handleMessageSeller(order.Product.user)}
-                                                        >
-                                                            Message Seller
-                                                        </button>
-                                                    )}
+                                                    <p className='text-sm text-gray-500'>{order.Product?.user?.email || order.product?.user?.email || ''}</p>
                                                 </div>
-                                            ) : (
-                                                <span className='text-gray-400'>N/A</span>
-                                            )}
+                                            </div>
+                                        </td>
+                                        {/* Product Info */}
+                                        <td className='p-4'>
+                                            <div className='flex items-center gap-2'>
+                                                {(order.Product?.image || order.product?.image || order.Product?.img || order.product?.img) && (
+                                                    <img
+                                                        src={
+                                                            (order.Product?.image || order.product?.image || order.Product?.img || order.product?.img)?.startsWith('http')
+                                                                ? (order.Product?.image || order.product?.image || order.Product?.img || order.product?.img)
+                                                                : `http://localhost:5000${order.Product?.image || order.product?.image || order.Product?.img || order.product?.img}`
+                                                        }
+                                                        alt="Product"
+                                                        className="w-8 h-8 rounded object-cover border"
+                                                        onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                                                    />
+                                                )}
+                                                <div>
+                                                    <div className='font-semibold text-gray-700'>
+                                                        {order.Product?.name || order.product?.name || order.product_name || 'Product'}
+                                                    </div>
+                                                    <div className='text-sm text-gray-500'>
+                                                        ${order.Product?.price || order.product?.price || 0} per unit
+                                                    </div>
+                                                </div>
+                                            </div>
                                         </td>
                                         <td className='p-4 text-center'>
                                             <span className='bg-[#E6F2D9] px-3 py-1 rounded-full font-semibold text-[#78C726]'>
