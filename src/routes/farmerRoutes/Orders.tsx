@@ -17,40 +17,56 @@ const FarmerOrders = () => {
     const currentUser = getCurrentUser();
 
     React.useEffect(() => {
-        fetchOrders();
-        fetchProducts();
+        // Fetch products first, then orders
+        const loadData = async () => {
+            await fetchProductsAndOrders();
+        };
+        loadData();
         
         // Auto-refresh every 30 seconds to check for new orders
         const interval = setInterval(() => {
-            fetchOrders();
+            loadData();
         }, 30000);
         
         return () => clearInterval(interval);
     }, [refreshKey]);
 
-    const fetchProducts = async () => {
+    const fetchProductsAndOrders = async () => {
         try {
-            const response = await axios.get(`${BACKEND_URL}/product`);
-            const data = Array.isArray(response.data.content) ? response.data.content : [];
-            const myProducts = data.filter((p: any) => p.user_id === currentUser?.id);
-            setProducts(myProducts);
-        } catch (error) {
-            console.error('Error fetching products:', error);
-        }
-    };
-
-    const fetchOrders = async () => {
-        try {
-            const response = await axios.get(`${BACKEND_URL}/orders`);
-            const data = Array.isArray(response.data.content) ? response.data.content : [];
+            // Fetch products first
+            const productResponse = await axios.get(`${BACKEND_URL}/product`);
+            const productData = Array.isArray(productResponse.data.content) ? productResponse.data.content : [];
+            console.log('All products:', productData.length);
+            console.log('Current user ID for product filtering:', currentUser?.id);
             
-            console.log('Fetched all orders:', data.length);
+            const myProducts = productData.filter((p: any) => p.user_id === currentUser?.id);
+            console.log('My products found:', myProducts.length);
+            console.log('My products:', myProducts);
+            
+            setProducts(myProducts);
+            
+            // Now fetch orders and filter using the products we just fetched
+            const orderResponse = await axios.get(`${BACKEND_URL}/orders`);
+            const orderData = Array.isArray(orderResponse.data.content) ? orderResponse.data.content : [];
+            
+            console.log('Fetched all orders:', orderData.length);
             console.log('Current user ID:', currentUser?.id);
             
+            // Debug: Log first order structure
+            if (orderData.length > 0) {
+                console.log('First order:', JSON.stringify(orderData[0], null, 2));
+                console.log('First order product (lowercase):', orderData[0].product);
+            }
+            
             // Filter orders to show only those for products owned by this farmer
-            const myOrders = data.filter((order: any) => {
-                // Check if the order's product belongs to the current farmer
-                return order.Product && order.Product.user_id === currentUser?.id;
+            // Using the products we just fetched, not the state
+            const myProductIds = myProducts.map(p => p.id);
+            console.log('My product IDs:', myProductIds);
+            
+            const myOrders = orderData.filter((order: any) => {
+                const matches = myProductIds.includes(order.product_id);
+                console.log(`Order ${order.id}: product_id = ${order.product_id}, matches my products: ${matches}`);
+                return matches;
             });
             
             console.log('Filtered farmer orders:', myOrders.length);
@@ -59,7 +75,7 @@ const FarmerOrders = () => {
             setOrders(myOrders);
             setLoading(false);
         } catch (error) {
-            console.error('Error fetching orders:', error);
+            console.error('Error fetching data:', error);
             setLoading(false);
         }
     };
@@ -86,7 +102,7 @@ const FarmerOrders = () => {
         try {
             await axios.put(`${BACKEND_URL}/orders/${orderId}`, { status: 'accepted' });
             alert('Order accepted successfully! Product inventory has been updated.');
-            fetchOrders();
+            fetchProductsAndOrders();
         } catch (error) {
             console.error('Error accepting order:', error);
             alert('Failed to accept order. Please try again.');
@@ -97,7 +113,7 @@ const FarmerOrders = () => {
         try {
             await axios.put(`${BACKEND_URL}/orders/${orderId}`, { status: 'delivered' });
             alert('Order marked as delivered!');
-            fetchOrders();
+            fetchProductsAndOrders();
         } catch (error) {
             console.error('Error updating order:', error);
             alert('Failed to update order status.');
@@ -110,7 +126,7 @@ const FarmerOrders = () => {
         try {
             await axios.put(`${BACKEND_URL}/orders/${orderId}`, { status: 'cancelled' });
             alert('Order cancelled successfully.');
-            fetchOrders();
+            fetchProductsAndOrders();
         } catch (error) {
             console.error('Error cancelling order:', error);
             alert('Failed to cancel order.');
@@ -240,26 +256,60 @@ const FarmerOrders = () => {
                                 </tr>
                             </thead>
                             <tbody>
-                                {orders.map((order, index) => {
-                                    // Handle both User/user and Product/product naming
-                                    const customer = order.User || order.user;
-                                    const product = order.Product || order.product;
-                                    
-                                    return (
+                                {orders.map((order, index) => (
                                     <tr key={order.id} className={`border-t ${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'} hover:bg-[#F5F9F0] transition-all`}>
                                         <td className='p-4'>
                                             <span className='font-semibold text-gray-800'>#{order.id}</span>
                                         </td>
+                                        {/* Customer Info */}
                                         <td className='p-4'>
-                                            <div>
-                                                <p className='font-semibold text-gray-800'>{customer?.name || 'N/A'}</p>
-                                                <p className='text-sm text-gray-500'>{customer?.email || 'N/A'}</p>
-                                                <p className='text-sm text-gray-500'>{customer?.phone || 'N/A'}</p>
+                                            <div className='flex items-center gap-2'>
+                                                {(order.user?.profileimg) && (
+                                                    <img
+                                                        src={
+                                                            order.user.profileimg?.startsWith('http')
+                                                                ? order.user.profileimg
+                                                                : `http://localhost:5000${order.user.profileimg}`
+                                                        }
+                                                        alt="Customer"
+                                                        className="w-8 h-8 rounded-full object-cover border"
+                                                        onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                                                    />
+                                                )}
+                                                <div>
+                                                    <p className='font-semibold text-gray-800'>
+                                                        {order.user?.name || 'Customer'}
+                                                        <span className='ml-2 text-xs text-gray-500'>ID: {order.user?.id || order.user_id}</span>
+                                                    </p>
+                                                    <p className='text-sm text-gray-500'>{order.user?.email || ''}</p>
+                                                    <p className='text-sm text-gray-500'>{order.user?.phone || ''}</p>
+                                                </div>
                                             </div>
                                         </td>
+                                        {/* Product Info */}
                                         <td className='p-4'>
-                                            <div className='font-semibold text-gray-700'>{product?.name || 'N/A'}</div>
-                                            <div className='text-sm text-gray-500'>${product?.price || 0} per unit</div>
+                                            <div className='flex items-center gap-2'>
+                                                {(order.product?.image) && (
+                                                    <img
+                                                        src={
+                                                            order.product.image?.startsWith('http')
+                                                                ? order.product.image
+                                                                : `http://localhost:5000${order.product.image}`
+                                                        }
+                                                        alt="Product"
+                                                        className="w-8 h-8 rounded object-cover border"
+                                                        onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                                                    />
+                                                )}
+                                                <div>
+                                                    <div className='font-semibold text-gray-700'>
+                                                        {order.product?.name || 'Product'}
+                                                    </div>
+                                                    <div className='text-sm text-gray-500'>
+                                                        ${order.product?.price || 0} per unit
+                                                    </div>
+                                                </div>
+                                            </div>
                                         </td>
                                         <td className='p-4 text-center'>
                                             <span className='bg-[#E6F2D9] px-3 py-1 rounded-full font-semibold text-[#78C726]'>
@@ -322,7 +372,7 @@ const FarmerOrders = () => {
                                             </div>
                                         </td>
                                     </tr>
-                                )})}
+                                ))}
                             </tbody>
                         </table>
                     </div>
